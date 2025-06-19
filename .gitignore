@@ -1,0 +1,63 @@
+# Nextflow work directory
+work/
+
+# Nextflow logs
+.nextflow*
+
+# Results directory
+results/
+
+# Test data
+test_data/
+
+# Reference data
+ref/
+
+# Temporary files
+*.tmp
+*.temp
+
+# R temporary files
+.Rhistory
+.RData
+.Rproj.user
+
+# Python cache
+__pycache__/
+*.pyc
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+
+# Backup files
+*~
+*.bak
+*.orig
+
+# Log files
+*.log
+
+# PLINK output files (when testing)
+*.bed
+*.bim
+*.fam
+*.genome
+*.hwe
+*.lmiss
+*.imiss
+*.sexcheck
+*.ibc
+*.prune.in
+*.prune.out
+*.sscore
+*.eigenvec*
+*.eigenval
+
+# Compressed files
+*.tar.gz
+*.zip

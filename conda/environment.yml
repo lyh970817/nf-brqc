@@ -1,0 +1,22 @@
+name: bioresource-qc
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - r-base=4.3.0
+  - r-tidyverse
+  - r-data.table
+  - r-caret
+  - r-proc
+  - r-verification
+  - r-ggplot2
+  - r-cowplot
+  - r-mlmetrics
+  - r-glmnet
+  - r-optparse
+  - plink=1.9
+  - plink2
+  - pip
+  - pip:
+    - optargs
