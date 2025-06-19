@@ -79,6 +79,34 @@ nextflow run main.nf --data /path/to/plink_files_prefix --name study_name
   nextflow run main.nf -profile singularity --data /path/to/plink_files_prefix --name study_name
   ```
 
+- `slurm`: Uses Slurm workload manager for HPC clusters
+  ```bash
+  nextflow run main.nf -profile slurm --data /path/to/plink_files_prefix --name study_name
+  ```
+
+- `slurm_conda`: Combines Slurm with Conda environment management
+  ```bash
+  nextflow run main.nf -profile slurm_conda --data /path/to/plink_files_prefix --name study_name
+  ```
+
+- `slurm_singularity`: Combines Slurm with Singularity containers
+  ```bash
+  nextflow run main.nf -profile slurm_singularity --data /path/to/plink_files_prefix --name study_name
+  ```
+
+### Running on Slurm Clusters:
+
+For detailed Slurm usage instructions, see [docs/SLURM_USAGE.md](docs/SLURM_USAGE.md).
+
+Quick start for Slurm:
+```bash
+# Submit as a Slurm job
+sbatch scripts/submit_slurm.sh /path/to/plink_files study_name
+
+# Or run directly with Slurm profile
+nextflow run main.nf -profile slurm -c conf/slurm.config --data /path/to/plink_files --name study_name
+```
+
 ## Output
 
 The pipeline creates a directory structure with the following components:
