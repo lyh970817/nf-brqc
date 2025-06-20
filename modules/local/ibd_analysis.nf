@@ -3,7 +3,7 @@
  */
 
 process IBD_CALCULATION {
-    tag "$meta.id"
+    tag "${params.data}"
     label 'process_high'
 
     conda "${moduleDir}/../../conda/environment.yml"
@@ -12,12 +12,12 @@ process IBD_CALCULATION {
         'quay.io/biocontainers/plink:1.90b6.21--h779adbc_1' }"
 
     input:
-    tuple val(meta), path(bed), path(bim), path(fam)
+    tuple path(bed), path(bim), path(fam)
 
     output:
-    tuple val(meta), path("${meta.id}.IBD.bed"), path("${meta.id}.IBD.bim"), path("${meta.id}.IBD.fam"), emit: plink_files
-    path("${meta.id}.IBD.genome"), emit: genome
-    path("${meta.id}.IBD.log"), emit: log
+    tuple path("*.IBD.bed"), path("*.IBD.bim"), path("*.IBD.fam"), emit: plink_files
+    path("*.IBD.genome"), emit: genome
+    path("*.IBD.log"), emit: log
     path "versions.yml", emit: versions
 
     when:
@@ -25,7 +25,7 @@ process IBD_CALCULATION {
 
     script:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${meta.id}"
+    def prefix = task.ext.prefix ?: "${params.data.split('/').last()}"
     def memory = task.memory ? "--memory ${task.memory.toMega()}" : ""
     
     """
@@ -46,7 +46,7 @@ process IBD_CALCULATION {
 }
 
 process IBD_OUTLIER_DETECTION {
-    tag "$meta.id"
+    tag "${params.data}"
     label 'process_low'
 
     conda "${moduleDir}/../../conda/environment.yml"
@@ -55,16 +55,16 @@ process IBD_OUTLIER_DETECTION {
         'quay.io/biocontainers/gawk:5.1.0' }"
 
     input:
-    tuple val(meta), path(genome_file)
+    path(genome_file)
     path(imiss_file)
     val(study_name)
     val(ibd_threshold)
 
     output:
-    tuple val(meta), path("pihat_over_9_${study_name}.txt"), emit: twin_pairs
-    tuple val(meta), path("pihat_btw_4_6_${study_name}.txt"), emit: sibling_pairs
-    tuple val(meta), path("callrate_pihat_over_9_${study_name}.txt"), emit: twin_pairs_callrate
-    tuple val(meta), path("*.IBD_outliers.txt"), emit: ibd_outliers
+    path("pihat_over_9_${study_name}.txt"), emit: twin_pairs
+    path("pihat_btw_4_6_${study_name}.txt"), emit: sibling_pairs
+    path("callrate_pihat_over_9_${study_name}.txt"), emit: twin_pairs_callrate
+    path("*.IBD_outliers.txt"), emit: ibd_outliers
     path "versions.yml", emit: versions
 
     when:
@@ -72,7 +72,7 @@ process IBD_OUTLIER_DETECTION {
 
     script:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${meta.id}"
+    def prefix = task.ext.prefix ?: "${params.data.split('/').last()}"
     
     """
     # Check >0.9 Pi_Hat individuals: duplicates or twins
@@ -115,7 +115,7 @@ process IBD_OUTLIER_DETECTION {
 }
 
 process INDIVIDUAL_IBD_ANALYSIS {
-    tag "$meta.id"
+    tag "${params.data}"
     label 'process_medium'
 
     conda "${moduleDir}/../../conda/environment.yml"
@@ -124,12 +124,12 @@ process INDIVIDUAL_IBD_ANALYSIS {
         'quay.io/biocontainers/r-base:4.3.0' }"
 
     input:
-    tuple val(meta), path(genome_file)
+    path(genome_file)
     val(study_name)
     val(sd_threshold)
 
     output:
-    tuple val(meta), path("*.IBD_INDIV_outliers.txt"), emit: individual_outliers
+    path("*.IBD_INDIV_outliers.txt"), emit: individual_outliers
     path "versions.yml", emit: versions
 
     when:
@@ -137,7 +137,7 @@ process INDIVIDUAL_IBD_ANALYSIS {
 
     script:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${meta.id}"
+    def prefix = task.ext.prefix ?: "${params.data.split('/').last()}"
     
     """
     R --file=${moduleDir}/../../bin/IndividualIBD.r --args ${prefix} ${sd_threshold}
@@ -150,7 +150,7 @@ process INDIVIDUAL_IBD_ANALYSIS {
 }
 
 process IBD_HISTOGRAMS {
-    tag "$meta.id"
+    tag "${params.data}"
     label 'process_low'
 
     conda "${moduleDir}/../../conda/environment.yml"
@@ -159,11 +159,11 @@ process IBD_HISTOGRAMS {
         'quay.io/biocontainers/r-base:4.3.0' }"
 
     input:
-    tuple val(meta), path(genome_file)
+    path(genome_file)
     val(study_name)
 
     output:
-    tuple val(meta), path("*_${study_name}.pdf"), emit: plots
+    path("*_${study_name}.pdf"), emit: plots
     path "versions.yml", emit: versions
 
     when:
@@ -171,7 +171,7 @@ process IBD_HISTOGRAMS {
 
     script:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${meta.id}"
+    def prefix = task.ext.prefix ?: "${params.data.split('/').last()}"
     
     """
     # Plot all IBD Histograms
@@ -185,7 +185,7 @@ process IBD_HISTOGRAMS {
 }
 
 process INDIVIDUAL_IBD_HISTOGRAMS {
-    tag "$meta.id"
+    tag "${params.data}"
     label 'process_low'
 
     conda "${moduleDir}/../../conda/environment.yml"
@@ -194,11 +194,11 @@ process INDIVIDUAL_IBD_HISTOGRAMS {
         'quay.io/biocontainers/r-base:4.3.0' }"
 
     input:
-    tuple val(meta), path(genome_file)
+    path(genome_file)
     val(sd_threshold)
 
     output:
-    tuple val(meta), path("IndvIBD_Hist_*.pdf"), emit: plots
+    path("IndvIBD_Hist_*.pdf"), emit: plots
     path "versions.yml", emit: versions
 
     when:
@@ -206,7 +206,7 @@ process INDIVIDUAL_IBD_HISTOGRAMS {
 
     script:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${meta.id}"
+    def prefix = task.ext.prefix ?: "${params.data.split('/').last()}"
     
     """
     # Plot Individual IBD outlier Histograms
