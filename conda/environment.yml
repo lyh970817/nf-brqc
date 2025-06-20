@@ -15,6 +15,7 @@ dependencies:
   - r-mlmetrics
   - r-glmnet
   - r-optparse
+  - r-gridextra
   - plink=1.9
   - plink2
   - pip
