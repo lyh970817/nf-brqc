@@ -3,7 +3,7 @@
  */
 
 process LD_PRUNING {
-    tag "$meta.id"
+    tag "${params.data}"
     label 'process_high'
 
     conda "${moduleDir}/../../conda/environment.yml"
@@ -12,13 +12,13 @@ process LD_PRUNING {
         'quay.io/biocontainers/plink:1.90b6.21--h779adbc_1' }"
 
     input:
-    tuple val(meta), path(bed), path(bim), path(fam)
+    tuple path(bed), path(bim), path(fam)
     val(window_size)
     val(step_size)
     val(r2_threshold)
 
     output:
-    tuple val(meta), path("*.LD_Pre.bed"), path("*.LD_Pre.bim"), path("*.LD_Pre.fam"), emit: ld_pre_files
+    tuple path("*.LD_Pre.bed"), path("*.LD_Pre.bim"), path("*.LD_Pre.fam"), emit: ld_pre_files
     path("*.LD_Pre.prune.in"), emit: prune_in
     path("*.LD_Pre.prune.out"), emit: prune_out
     path("*.LD_Pre.log"), emit: log
@@ -29,7 +29,7 @@ process LD_PRUNING {
 
     script:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${meta.id}"
+    def prefix = task.ext.prefix ?: "${params.data.split('/').last()}"
     def memory = task.memory ? "--memory ${task.memory.toMega()}" : ""
     
     """
@@ -50,7 +50,7 @@ process LD_PRUNING {
 }
 
 process EXTRACT_PRUNED_SNPS {
-    tag "$meta.id"
+    tag "${params.data}"
     label 'process_medium'
 
     conda "${moduleDir}/../../conda/environment.yml"
@@ -59,11 +59,11 @@ process EXTRACT_PRUNED_SNPS {
         'quay.io/biocontainers/plink:1.90b6.21--h779adbc_1' }"
 
     input:
-    tuple val(meta), path(bed), path(bim), path(fam)
+    tuple path(bed), path(bim), path(fam)
     path(prune_in)
 
     output:
-    tuple val(meta), path("*.LD_Pruned.bed"), path("*.LD_Pruned.bim"), path("*.LD_Pruned.fam"), emit: plink_files
+    tuple path("*.LD_Pruned.bed"), path("*.LD_Pruned.bim"), path("*.LD_Pruned.fam"), emit: plink_files
     path("*.LD_Pruned.log"), emit: log
     path "versions.yml", emit: versions
 
@@ -72,7 +72,7 @@ process EXTRACT_PRUNED_SNPS {
 
     script:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${meta.id}"
+    def prefix = task.ext.prefix ?: "${params.data.split('/').last()}"
     def memory = task.memory ? "--memory ${task.memory.toMega()}" : ""
     
     """
@@ -93,7 +93,7 @@ process EXTRACT_PRUNED_SNPS {
 }
 
 process HIGH_LD_REGIONS_EXCLUDE {
-    tag "$meta.id"
+    tag "${params.data}"
     label 'process_low'
 
     conda "${moduleDir}/../../conda/environment.yml"
@@ -102,11 +102,11 @@ process HIGH_LD_REGIONS_EXCLUDE {
         'quay.io/biocontainers/gawk:5.1.0' }"
 
     input:
-    tuple val(meta), path(bim)
+    path(bim)
     val(build)
 
     output:
-    tuple val(meta), path("highLD_and_autosomal_excludes"), emit: exclude_list
+    path("highLD_and_autosomal_excludes"), emit: exclude_list
     path "versions.yml", emit: versions
 
     when:
@@ -130,7 +130,7 @@ process HIGH_LD_REGIONS_EXCLUDE {
 }
 
 process EXCLUDE_HIGH_LD_AUTOSOMAL {
-    tag "$meta.id"
+    tag "${params.data}"
     label 'process_medium'
 
     conda "${moduleDir}/../../conda/environment.yml"
@@ -139,11 +139,11 @@ process EXCLUDE_HIGH_LD_AUTOSOMAL {
         'quay.io/biocontainers/plink:1.90b6.21--h779adbc_1' }"
 
     input:
-    tuple val(meta), path(bed), path(bim), path(fam)
+    tuple path(bed), path(bim), path(fam)
     path(exclude_list)
 
     output:
-    tuple val(meta), path("*_autosomalchr.bed"), path("*_autosomalchr.bim"), path("*_autosomalchr.fam"), emit: plink_files
+    tuple path("*_autosomalchr.bed"), path("*_autosomalchr.bim"), path("*_autosomalchr.fam"), emit: plink_files
     path("*_autosomalchr.log"), emit: log
     path "versions.yml", emit: versions
 
@@ -152,7 +152,7 @@ process EXCLUDE_HIGH_LD_AUTOSOMAL {
 
     script:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${meta.id}"
+    def prefix = task.ext.prefix ?: "${params.data.split('/').last()}"
     def memory = task.memory ? "--memory ${task.memory.toMega()}" : ""
     
     """
@@ -173,7 +173,7 @@ process EXCLUDE_HIGH_LD_AUTOSOMAL {
 }
 
 process SEX_CHECK_SPLIT_X {
-    tag "$meta.id"
+    tag "${params.data}"
     label 'process_medium'
 
     conda "${moduleDir}/../../conda/environment.yml"
@@ -182,11 +182,11 @@ process SEX_CHECK_SPLIT_X {
         'quay.io/biocontainers/plink:1.90b6.21--h779adbc_1' }"
 
     input:
-    tuple val(meta), path(bed), path(bim), path(fam)
+    tuple path(bed), path(bim), path(fam)
     val(build)
 
     output:
-    tuple val(meta), path("*_split_x.bed"), path("*_split_x.bim"), path("*_split_x.fam"), emit: plink_files
+    tuple path("*_split_x.bed"), path("*_split_x.bim"), path("*_split_x.fam"), emit: plink_files
     path("*_split_x.log"), emit: log
     path "versions.yml", emit: versions
 
@@ -195,7 +195,7 @@ process SEX_CHECK_SPLIT_X {
 
     script:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${meta.id}"
+    def prefix = task.ext.prefix ?: "${params.data.split('/').last()}"
     def memory = task.memory ? "--memory ${task.memory.toMega()}" : ""
     
     """
@@ -216,7 +216,7 @@ process SEX_CHECK_SPLIT_X {
 }
 
 process SEX_CHECK {
-    tag "$meta.id"
+    tag "${params.data}"
     label 'process_medium'
 
     conda "${moduleDir}/../../conda/environment.yml"
@@ -225,10 +225,10 @@ process SEX_CHECK {
         'quay.io/biocontainers/plink:1.90b6.21--h779adbc_1' }"
 
     input:
-    tuple val(meta), path(bed), path(bim), path(fam)
+    tuple path(bed), path(bim), path(fam)
 
     output:
-    tuple val(meta), path("*_sexcheck.sexcheck"), emit: sexcheck
+    path("*_sexcheck.sexcheck"), emit: sexcheck
     path("*_sexcheck.log"), emit: log
     path "versions.yml", emit: versions
 
@@ -237,7 +237,7 @@ process SEX_CHECK {
 
     script:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${meta.id}"
+    def prefix = task.ext.prefix ?: "${params.data.split('/').last()}"
     def memory = task.memory ? "--memory ${task.memory.toMega()}" : ""
     
     """
@@ -258,7 +258,7 @@ process SEX_CHECK {
 }
 
 process SEX_CHECK_PLOTS {
-    tag "$meta.id"
+    tag "${params.data}"
     label 'process_low'
 
     conda "${moduleDir}/../../conda/environment.yml"
@@ -267,12 +267,12 @@ process SEX_CHECK_PLOTS {
         'quay.io/biocontainers/r-base:4.3.0' }"
 
     input:
-    tuple val(meta), path(sexcheck_file)
+    path(sexcheck_file)
     val(study_name)
 
     output:
-    tuple val(meta), path("sexcheck_hist_${study_name}*"), emit: plots
-    tuple val(meta), path("sexmismatch_${study_name}.txt"), emit: mismatch_table
+    path("sexcheck_hist_${study_name}*"), emit: plots
+    path("sexmismatch_${study_name}.txt"), emit: mismatch_table
     path "versions.yml", emit: versions
 
     when:
@@ -295,7 +295,7 @@ process SEX_CHECK_PLOTS {
 }
 
 process HETEROZYGOSITY_CHECK {
-    tag "$meta.id"
+    tag "${params.data}"
     label 'process_medium'
 
     conda "${moduleDir}/../../conda/environment.yml"
@@ -304,10 +304,10 @@ process HETEROZYGOSITY_CHECK {
         'quay.io/biocontainers/plink:1.90b6.21--h779adbc_1' }"
 
     input:
-    tuple val(meta), path(bed), path(bim), path(fam)
+    tuple path(bed), path(bim), path(fam)
 
     output:
-    tuple val(meta), path("*_Hetcheck.bed"), path("*_Hetcheck.bim"), path("*_Hetcheck.fam"), emit: plink_files
+    tuple path("*_Hetcheck.bed"), path("*_Hetcheck.bim"), path("*_Hetcheck.fam"), emit: plink_files
     path("*_Hetcheck.ibc"), emit: ibc
     path("*_Hetcheck.log"), emit: log
     path "versions.yml", emit: versions
@@ -317,7 +317,7 @@ process HETEROZYGOSITY_CHECK {
 
     script:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${meta.id}"
+    def prefix = task.ext.prefix ?: "${params.data.split('/').last()}"
     def memory = task.memory ? "--memory ${task.memory.toMega()}" : ""
     
     """
@@ -338,7 +338,7 @@ process HETEROZYGOSITY_CHECK {
 }
 
 process HETEROZYGOSITY_PLOTS {
-    tag "$meta.id"
+    tag "${params.data}"
     label 'process_low'
 
     conda "${moduleDir}/../../conda/environment.yml"
@@ -347,13 +347,13 @@ process HETEROZYGOSITY_PLOTS {
         'quay.io/biocontainers/r-base:4.3.0' }"
 
     input:
-    tuple val(meta), path(ibc_file)
+    path(ibc_file)
     path(sexcheck_file)
     val(study_name)
 
     output:
-    tuple val(meta), path("Het_check_hist_${study_name}.pdf"), emit: het_hist
-    tuple val(meta), path("HetFhat2_SexF_${study_name}.pdf"), emit: het_sex_plot
+    path("Het_check_hist_${study_name}.pdf"), emit: het_hist
+    path("HetFhat2_SexF_${study_name}.pdf"), emit: het_sex_plot
     path "versions.yml", emit: versions
 
     when:
