@@ -3,7 +3,7 @@
  */
 
 process MAF_FILTER {
-    tag "$meta.id"
+    tag "${params.data}"
     label 'process_medium'
 
     conda "${moduleDir}/../../conda/environment.yml"
@@ -12,11 +12,11 @@ process MAF_FILTER {
         'quay.io/biocontainers/plink:1.90b6.21--h779adbc_1' }"
 
     input:
-    tuple val(meta), path(bed), path(bim), path(fam)
+    tuple path(bed), path(bim), path(fam)
     val(maf_threshold)
 
     output:
-    tuple val(meta), path("*.bed"), path("*.bim"), path("*.fam"), emit: plink_files
+    tuple path("*.bed"), path("*.bim"), path("*.fam"), emit: plink_files
     path("*.log"), emit: log
     path "versions.yml", emit: versions
 
@@ -25,7 +25,7 @@ process MAF_FILTER {
 
     script:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${meta.id}"
+    def prefix = task.ext.prefix ?: "${params.data.split('/').last()}"
     def memory = task.memory ? "--memory ${task.memory.toMega()}" : ""
     
     """
@@ -46,7 +46,7 @@ process MAF_FILTER {
 }
 
 process MISSINGNESS_CHECK {
-    tag "$meta.id"
+    tag "${params.data}"
     label 'process_medium'
 
     conda "${moduleDir}/../../conda/environment.yml"
@@ -55,10 +55,10 @@ process MISSINGNESS_CHECK {
         'quay.io/biocontainers/plink:1.90b6.21--h779adbc_1' }"
 
     input:
-    tuple val(meta), path(bed), path(bim), path(fam)
+    tuple path(bed), path(bim), path(fam)
 
     output:
-    tuple val(meta), path("*_check.bed"), path("*_check.bim"), path("*_check.fam"), emit: plink_files
+    tuple path("*_check.bed"), path("*_check.bim"), path("*_check.fam"), emit: plink_files
     path("*_check.lmiss"), emit: lmiss
     path("*_check.imiss"), emit: imiss
     path("*_check.hwe"), emit: hwe
@@ -70,7 +70,7 @@ process MISSINGNESS_CHECK {
 
     script:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${meta.id}"
+    def prefix = task.ext.prefix ?: "${params.data.split('/').last()}"
     def memory = task.memory ? "--memory ${task.memory.toMega()}" : ""
     
     """
@@ -92,7 +92,7 @@ process MISSINGNESS_CHECK {
 }
 
 process MISSINGNESS_HISTOGRAMS {
-    tag "$meta.id"
+    tag "${params.data}"
     label 'process_low'
 
     conda "${moduleDir}/../../conda/environment.yml"
@@ -101,11 +101,11 @@ process MISSINGNESS_HISTOGRAMS {
         'quay.io/biocontainers/r-base:4.3.0' }"
 
     input:
-    tuple val(meta), path(lmiss)
+    path(lmiss)
     val(study_name)
 
     output:
-    tuple val(meta), path("missingness_hist*${study_name}*"), emit: plots
+    path("missingness_hist*${study_name}*"), emit: plots
     path "versions.yml", emit: versions
 
     when:
@@ -125,7 +125,7 @@ process MISSINGNESS_HISTOGRAMS {
 }
 
 process ITERATIVE_MISSINGNESS {
-    tag "$meta.id"
+    tag "${params.data}"
     label 'process_high'
 
     conda "${moduleDir}/../../conda/environment.yml"
@@ -134,13 +134,13 @@ process ITERATIVE_MISSINGNESS {
         'quay.io/biocontainers/plink:1.90b6.21--h779adbc_1' }"
 
     input:
-    tuple val(meta), path(bed), path(bim), path(fam)
+    tuple path(bed), path(bim), path(fam)
     val(start_threshold)
     val(end_threshold)
     val(step_size)
 
     output:
-    tuple val(meta), path("*.common_sample*.SNP*.bed"), path("*.common_sample*.SNP*.bim"), path("*.common_sample*.SNP*.fam"), emit: plink_files
+    tuple path("*.common_sample*.SNP*.bed"), path("*.common_sample*.SNP*.bim"), path("*.common_sample*.SNP*.fam"), emit: plink_files
     path("*.common_*.log"), emit: logs
     path "versions.yml", emit: versions
 
@@ -149,7 +149,7 @@ process ITERATIVE_MISSINGNESS {
 
     script:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${meta.id}"
+    def prefix = task.ext.prefix ?: "${params.data.split('/').last()}"
     def memory = task.memory ? "--memory ${task.memory.toMega()}" : ""
     
     """
@@ -164,7 +164,7 @@ process ITERATIVE_MISSINGNESS {
 }
 
 process ITERATIVE_MISSINGNESS_TABLE {
-    tag "$meta.id"
+    tag "${params.data}"
     label 'process_low'
 
     conda "${moduleDir}/../../conda/environment.yml"
@@ -173,12 +173,12 @@ process ITERATIVE_MISSINGNESS_TABLE {
         'quay.io/biocontainers/r-base:4.3.0' }"
 
     input:
-    tuple val(meta), path(log_files)
+    path(log_files)
     val(study_name)
 
     output:
-    tuple val(meta), path("Iterative_missingness_table_${study_name}.txt"), emit: table
-    tuple val(meta), path("itmiss_table_${study_name}*"), emit: plots
+    path("Iterative_missingness_table_${study_name}.txt"), emit: table
+    path("itmiss_table_${study_name}*"), emit: plots
     path "versions.yml", emit: versions
 
     when:
@@ -230,7 +230,7 @@ process ITERATIVE_MISSINGNESS_TABLE {
 }
 
 process HWE_CHECK {
-    tag "$meta.id"
+    tag "${params.data}"
     label 'process_medium'
 
     conda "${moduleDir}/../../conda/environment.yml"
@@ -239,10 +239,10 @@ process HWE_CHECK {
         'quay.io/biocontainers/plink:1.90b6.21--h779adbc_1' }"
 
     input:
-    tuple val(meta), path(bed), path(bim), path(fam)
+    tuple path(bed), path(bim), path(fam)
 
     output:
-    tuple val(meta), path("*_hardycheck.bed"), path("*_hardycheck.bim"), path("*_hardycheck.fam"), emit: plink_files
+    tuple path("*_hardycheck.bed"), path("*_hardycheck.bim"), path("*_hardycheck.fam"), emit: plink_files
     path("*_hardycheck.hwe"), emit: hwe
     path("*_hardycheck.log"), emit: log
     path "versions.yml", emit: versions
@@ -252,7 +252,7 @@ process HWE_CHECK {
 
     script:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${meta.id}"
+    def prefix = task.ext.prefix ?: "${params.data.split('/').last()}"
     def memory = task.memory ? "--memory ${task.memory.toMega()}" : ""
     
     """
@@ -273,7 +273,7 @@ process HWE_CHECK {
 }
 
 process HARDY_PLOTS {
-    tag "$meta.id"
+    tag "${params.data}"
     label 'process_low'
 
     conda "${moduleDir}/../../conda/environment.yml"
@@ -282,11 +282,11 @@ process HARDY_PLOTS {
         'quay.io/biocontainers/r-base:4.3.0' }"
 
     input:
-    tuple val(meta), path(hwe_file)
+    path(hwe_file)
     val(study_name)
 
     output:
-    tuple val(meta), path("hardy_*${study_name}*"), emit: plots
+    path("hardy_*${study_name}*"), emit: plots
     path "versions.yml", emit: versions
 
     when:
@@ -306,7 +306,7 @@ process HARDY_PLOTS {
 }
 
 process HWE_FILTER {
-    tag "$meta.id"
+    tag "${params.data}"
     label 'process_medium'
 
     conda "${moduleDir}/../../conda/environment.yml"
@@ -315,11 +315,11 @@ process HWE_FILTER {
         'quay.io/biocontainers/plink:1.90b6.21--h779adbc_1' }"
 
     input:
-    tuple val(meta), path(bed), path(bim), path(fam)
+    tuple path(bed), path(bim), path(fam)
     val(hwe_threshold)
 
     output:
-    tuple val(meta), path("*.hwe*.bed"), path("*.hwe*.bim"), path("*.hwe*.fam"), emit: plink_files
+    tuple path("*.hwe*.bed"), path("*.hwe*.bim"), path("*.hwe*.fam"), emit: plink_files
     path("*.hwe*.log"), emit: log
     path "versions.yml", emit: versions
 
@@ -328,7 +328,7 @@ process HWE_FILTER {
 
     script:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${meta.id}"
+    def prefix = task.ext.prefix ?: "${params.data.split('/').last()}"
     def memory = task.memory ? "--memory ${task.memory.toMega()}" : ""
     
     """
