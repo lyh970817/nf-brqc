@@ -50,7 +50,7 @@ process ANCESTRY_TARGET_SUBSET {
 }
 
 process ANCESTRY_TARGET_QC {
-    tag "$meta.id"
+    tag "${params.data}"
     label 'process_medium'
 
     conda "${moduleDir}/../../conda/environment.yml"
@@ -59,14 +59,14 @@ process ANCESTRY_TARGET_QC {
         'quay.io/biocontainers/plink:1.90b6.21--h779adbc_1' }"
 
     input:
-    tuple val(meta), path(bed), path(bim), path(fam)
+    tuple path(bed), path(bim), path(fam)
     val(geno_threshold)
     val(maf_threshold)
     val(hwe_threshold)
     val(sample_size)
 
     output:
-    tuple val(meta), path("target.QC.snplist"), emit: snplist
+    path("target.QC.snplist"), emit: snplist
     path "versions.yml", emit: versions
 
     when:
@@ -74,7 +74,7 @@ process ANCESTRY_TARGET_QC {
 
     script:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${meta.id}"
+    def prefix = task.ext.prefix ?: "${params.data.split('/').last()}"
     def memory = task.memory ? "--memory ${task.memory.toMega()}" : ""
     
     // Apply different QC based on sample size
