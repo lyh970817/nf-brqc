@@ -38,7 +38,7 @@ RUN conda env create -f /environment.yml && conda clean -a
 ENV PATH="/opt/conda/envs/bioresource-qc/bin:${PATH}"
 
 # Install R packages
-RUN R -e "install.packages(c('data.table', 'caret', 'pROC', 'verification', 'ggplot2', 'cowplot', 'MLmetrics', 'glmnet', 'optparse', 'tidyverse'), repos='https://cloud.r-project.org/')"
+RUN R -e "install.packages(c('data.table', 'caret', 'pROC', 'verification', 'ggplot2', 'cowplot', 'MLmetrics', 'glmnet', 'optparse', 'tidyverse', 'gridExtra', 'plotly', 'magrittr', 'knitr', 'lfactors'), repos='https://cloud.r-project.org/')"
 
 # Set working directory
 WORKDIR /data

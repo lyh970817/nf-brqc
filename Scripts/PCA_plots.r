@@ -1,5 +1,10 @@
 arg <- commandArgs(TRUE)
 
+library(ggplot2)
+library(plotly)
+library(magrittr)
+library(lfactors)
+
 file <- read.csv(arg[1], header = FALSE, sep = " " )
 reported_ancestry <- read.csv("1KG_Phenos_With_GIH.txt", sep = " ", header = FALSE)
 ancestry <- c("ASW", "CEU", "CHB", "CHS", "CLM", "FIN", "GBR", "IBS", "JPT", "LWK", "MXL", "PUR", "TSI", "YRI", "GIH")
@@ -18,7 +23,6 @@ dat$ancestry <- as.character(dat$V3.y)
 
 
 #pc 1 and 2
-library(plotly)
 
 
 p1and2 <- ggplot(data = dat,aes(x = V3.x, y = V4, color = ancestry)) +

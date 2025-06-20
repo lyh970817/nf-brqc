@@ -16,6 +16,10 @@ dependencies:
   - r-glmnet
   - r-optparse
   - r-gridextra
+  - r-plotly
+  - r-magrittr
+  - r-knitr
+  - r-lfactors
   - plink=1.9
   - plink2
   - pip
