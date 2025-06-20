@@ -118,9 +118,8 @@ workflow {
     def bim_file = Channel.fromPath("${params.data}.bim", checkIfExists: true)
     def fam_file = Channel.fromPath("${params.data}.fam", checkIfExists: true)
 
-    // Create meta map and combine input files
-    def meta = [id: params.name]
-    def input_ch = Channel.of([meta]).combine(bed_file).combine(bim_file).combine(fam_file)
+    // Create input channel directly with params.data
+    def input_ch = bed_file.combine(bim_file).combine(fam_file)
 
     // Run the pipeline
     // 1. Initial QC Steps
@@ -142,8 +141,8 @@ workflow {
     EXTRACT_PRUNED_SNPS(HWE_FILTER.out.plink_files, LD_PRUNING.out.prune_in)
 
     // 5. High LD regions and autosomal filtering
-    HIGH_LD_REGIONS_EXCLUDE(EXTRACT_PRUNED_SNPS.out.plink_files.map { meta_val, bed, bim, fam -> [meta_val, bim] }, "b38")
-    EXCLUDE_HIGH_LD_AUTOSOMAL(EXTRACT_PRUNED_SNPS.out.plink_files, HIGH_LD_REGIONS_EXCLUDE.out.exclude_list.map { meta_val, exclude -> exclude })
+    HIGH_LD_REGIONS_EXCLUDE(EXTRACT_PRUNED_SNPS.out.plink_files.map { bed, bim, fam -> bim }, "b38")
+    EXCLUDE_HIGH_LD_AUTOSOMAL(EXTRACT_PRUNED_SNPS.out.plink_files, HIGH_LD_REGIONS_EXCLUDE.out.exclude_list)
 
     // 6. Sex checks
     SEX_CHECK_SPLIT_X(EXTRACT_PRUNED_SNPS.out.plink_files, "b38")
@@ -152,11 +151,11 @@ workflow {
 
     // 7. Heterozygosity analysis
     HETEROZYGOSITY_CHECK(EXCLUDE_HIGH_LD_AUTOSOMAL.out.plink_files)
-    HETEROZYGOSITY_PLOTS(HETEROZYGOSITY_CHECK.out.ibc, SEX_CHECK.out.sexcheck.map { meta_val, sexcheck -> sexcheck }, params.name)
+    HETEROZYGOSITY_PLOTS(HETEROZYGOSITY_CHECK.out.ibc, SEX_CHECK.out.sexcheck, params.name)
 
     // 8. IBD analysis
     IBD_CALCULATION(EXCLUDE_HIGH_LD_AUTOSOMAL.out.plink_files)
-    IBD_OUTLIER_DETECTION(IBD_CALCULATION.out.genome, MISSINGNESS_CHECK.out.imiss.map { _meta_val, imiss -> imiss }, params.name, params.ibd)
+    IBD_OUTLIER_DETECTION(IBD_CALCULATION.out.genome, MISSINGNESS_CHECK.out.imiss, params.name, params.ibd)
     INDIVIDUAL_IBD_ANALYSIS(IBD_CALCULATION.out.genome, params.name, params.ind_ibd)
     IBD_HISTOGRAMS(IBD_CALCULATION.out.genome, params.name)
     INDIVIDUAL_IBD_HISTOGRAMS(IBD_CALCULATION.out.genome, params.ind_ibd)
