@@ -176,8 +176,8 @@ process ANCESTRY_PC_ANALYSIS {
 
     conda "${moduleDir}/../../conda/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/r-base:4.3.0' :
-        'quay.io/biocontainers/r-base:4.3.0' }"
+        'https://depot.galaxyproject.org/singularity/r-base:4.3.1' :
+        'quay.io/biocontainers/r-base:4.3.1' }"
 
     input:
     tuple val(meta), path(ref_scores)

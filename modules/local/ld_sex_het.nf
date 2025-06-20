@@ -263,8 +263,8 @@ process SEX_CHECK_PLOTS {
 
     conda "${moduleDir}/../../conda/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/r-base:4.3.0' :
-        'quay.io/biocontainers/r-base:4.3.0' }"
+        'https://depot.galaxyproject.org/singularity/r-base:4.3.1' :
+        'quay.io/biocontainers/r-base:4.3.1' }"
 
     input:
     path(sexcheck_file)
@@ -343,8 +343,8 @@ process HETEROZYGOSITY_PLOTS {
 
     conda "${moduleDir}/../../conda/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/r-base:4.3.0' :
-        'quay.io/biocontainers/r-base:4.3.0' }"
+        'https://depot.galaxyproject.org/singularity/r-base:4.3.1' :
+        'quay.io/biocontainers/r-base:4.3.1' }"
 
     input:
     path(ibc_file)

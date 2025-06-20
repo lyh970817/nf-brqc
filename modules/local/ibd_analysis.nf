@@ -120,8 +120,8 @@ process INDIVIDUAL_IBD_ANALYSIS {
 
     conda "${moduleDir}/../../conda/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/r-base:4.3.0' :
-        'quay.io/biocontainers/r-base:4.3.0' }"
+        'https://depot.galaxyproject.org/singularity/r-base:4.3.1' :
+        'quay.io/biocontainers/r-base:4.3.1' }"
 
     input:
     path(genome_file)
@@ -155,8 +155,8 @@ process IBD_HISTOGRAMS {
 
     conda "${moduleDir}/../../conda/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/r-base:4.3.0' :
-        'quay.io/biocontainers/r-base:4.3.0' }"
+        'https://depot.galaxyproject.org/singularity/r-base:4.3.1' :
+        'quay.io/biocontainers/r-base:4.3.1' }"
 
     input:
     path(genome_file)
@@ -190,8 +190,8 @@ process INDIVIDUAL_IBD_HISTOGRAMS {
 
     conda "${moduleDir}/../../conda/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/r-base:4.3.0' :
-        'quay.io/biocontainers/r-base:4.3.0' }"
+        'https://depot.galaxyproject.org/singularity/r-base:4.3.1' :
+        'quay.io/biocontainers/r-base:4.3.1' }"
 
     input:
     path(genome_file)
