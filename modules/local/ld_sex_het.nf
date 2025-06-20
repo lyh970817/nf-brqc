@@ -29,7 +29,7 @@ process LD_PRUNING {
 
     script:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${params.data.split('/').last()}"
+    def prefix = task.ext.prefix ?: "${bed.baseName}"
     def memory = task.memory ? "--memory ${task.memory.toMega()}" : ""
     
     """
@@ -72,7 +72,7 @@ process EXTRACT_PRUNED_SNPS {
 
     script:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${params.data.split('/').last()}"
+    def prefix = task.ext.prefix ?: "${bed.baseName}"
     def memory = task.memory ? "--memory ${task.memory.toMega()}" : ""
     
     """
@@ -152,7 +152,7 @@ process EXCLUDE_HIGH_LD_AUTOSOMAL {
 
     script:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${params.data.split('/').last()}"
+    def prefix = task.ext.prefix ?: "${bed.baseName}"
     def memory = task.memory ? "--memory ${task.memory.toMega()}" : ""
     
     """
@@ -195,7 +195,7 @@ process SEX_CHECK_SPLIT_X {
 
     script:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${params.data.split('/').last()}"
+    def prefix = task.ext.prefix ?: "${bed.baseName}"
     def memory = task.memory ? "--memory ${task.memory.toMega()}" : ""
     
     """
@@ -237,7 +237,7 @@ process SEX_CHECK {
 
     script:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${params.data.split('/').last()}"
+    def prefix = task.ext.prefix ?: "${bed.baseName}"
     def memory = task.memory ? "--memory ${task.memory.toMega()}" : ""
     
     """
@@ -317,7 +317,7 @@ process HETEROZYGOSITY_CHECK {
 
     script:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${params.data.split('/').last()}"
+    def prefix = task.ext.prefix ?: "${bed.baseName}"
     def memory = task.memory ? "--memory ${task.memory.toMega()}" : ""
     
     """

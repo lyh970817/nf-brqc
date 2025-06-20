@@ -74,7 +74,7 @@ process ANCESTRY_TARGET_QC {
 
     script:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${params.data.split('/').last()}"
+    def prefix = task.ext.prefix ?: "${bed.baseName}"
     def memory = task.memory ? "--memory ${task.memory.toMega()}" : ""
     
     // Apply different QC based on sample size

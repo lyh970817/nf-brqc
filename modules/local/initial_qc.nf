@@ -25,7 +25,7 @@ process MAF_FILTER {
 
     script:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${params.data.split('/').last()}"
+    def prefix = task.ext.prefix ?: "${bed.baseName}"
     def memory = task.memory ? "--memory ${task.memory.toMega()}" : ""
     
     """
@@ -70,9 +70,9 @@ process MISSINGNESS_CHECK {
 
     script:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${params.data.split('/').last()}"
+    def prefix = task.ext.prefix ?: "${bed.baseName}"
     def memory = task.memory ? "--memory ${task.memory.toMega()}" : ""
-    
+
     """
     plink \\
         --bfile ${prefix} \\
@@ -149,7 +149,7 @@ process ITERATIVE_MISSINGNESS {
 
     script:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${params.data.split('/').last()}"
+    def prefix = task.ext.prefix ?: "${bed.baseName}"
     def memory = task.memory ? "--memory ${task.memory.toMega()}" : ""
     
     """
@@ -252,7 +252,7 @@ process HWE_CHECK {
 
     script:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${params.data.split('/').last()}"
+    def prefix = task.ext.prefix ?: "${bed.baseName}"
     def memory = task.memory ? "--memory ${task.memory.toMega()}" : ""
     
     """
@@ -328,7 +328,7 @@ process HWE_FILTER {
 
     script:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${params.data.split('/').last()}"
+    def prefix = task.ext.prefix ?: "${bed.baseName}"
     def memory = task.memory ? "--memory ${task.memory.toMega()}" : ""
     
     """
