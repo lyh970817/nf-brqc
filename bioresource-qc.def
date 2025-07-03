@@ -1,0 +1,86 @@
+Bootstrap: docker
+From: continuumio/miniconda3:latest
+
+%labels
+    Author Your Name
+    Version 1.0
+    Description Bioresource QC pipeline container with all dependencies
+
+%help
+    This container includes all dependencies for the bioresource QC pipeline:
+    - R base 4.3.1 with required packages
+    - PLINK 1.9 and PLINK2
+    - All other conda dependencies specified in environment.yml
+    
+    Usage:
+    singularity exec bioresource-qc.sif <command>
+
+%environment
+    export PATH=/opt/conda/bin:$PATH
+    export CONDA_DEFAULT_ENV=bioresource-qc
+    export CONDA_PREFIX=/opt/conda/envs/bioresource-qc
+
+%post
+    # Update system packages
+    apt-get update && apt-get install -y \
+        wget \
+        bzip2 \
+        ca-certificates \
+        libglib2.0-0 \
+        libxext6 \
+        libsm6 \
+        libxrender1 \
+        git \
+        mercurial \
+        subversion \
+        build-essential \
+        && apt-get clean \
+        && rm -rf /var/lib/apt/lists/*
+
+    # Initialize conda
+    /opt/conda/bin/conda init bash
+    
+    # Create conda environment from environment.yml equivalent
+    /opt/conda/bin/conda create -n bioresource-qc -c conda-forge -c bioconda -c defaults \
+        r-base=4.3.1 \
+        r-tidyverse \
+        r-data.table \
+        r-caret \
+        r-proc \
+        r-verification \
+        r-ggplot2 \
+        r-cowplot \
+        r-mlmetrics \
+        r-glmnet \
+        r-optparse \
+        r-gridextra \
+        r-plotly \
+        r-magrittr \
+        r-knitr \
+        r-lfactors \
+        plink=1.9 \
+        plink2 \
+        pip \
+        -y
+
+    # Install pip packages (matching environment.yml)
+    /opt/conda/bin/conda run -n bioresource-qc pip install optargs
+
+    # Clean conda cache to reduce image size
+    /opt/conda/bin/conda clean -all -y
+
+    # Make conda environment the default
+    echo "source activate bioresource-qc" >> ~/.bashrc
+
+%runscript
+    # Activate the conda environment and run the command
+    exec /opt/conda/bin/conda run -n bioresource-qc "$@"
+
+%test
+    # Test that key software is available
+    /opt/conda/bin/conda run -n bioresource-qc which R
+    /opt/conda/bin/conda run -n bioresource-qc which plink
+    /opt/conda/bin/conda run -n bioresource-qc which plink2
+    /opt/conda/bin/conda run -n bioresource-qc R --version
+    /opt/conda/bin/conda run -n bioresource-qc plink --version
+    /opt/conda/bin/conda run -n bioresource-qc plink2 --version

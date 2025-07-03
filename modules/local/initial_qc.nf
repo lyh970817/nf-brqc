@@ -7,9 +7,9 @@ process MAF_FILTER {
     label 'process_medium'
 
     conda "${moduleDir}/../../conda/environment.yml"
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/plink:1.90b6.21--h779adbc_1' :
-        'quay.io/biocontainers/plink:1.90b6.21--h779adbc_1' }"
+    container "${ workflow.containerEngine == 'singularity' ?
+        'bioresource-qc.def' :
+        'bioresource-qc:latest' }"
 
     input:
     tuple path(bed), path(bim), path(fam)
@@ -50,9 +50,9 @@ process MISSINGNESS_CHECK {
     label 'process_medium'
 
     conda "${moduleDir}/../../conda/environment.yml"
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/plink:1.90b6.21--h779adbc_1' :
-        'quay.io/biocontainers/plink:1.90b6.21--h779adbc_1' }"
+    container "${ workflow.containerEngine == 'singularity' ?
+        'bioresource-qc.def' :
+        'bioresource-qc:latest' }"
 
     input:
     tuple path(bed), path(bim), path(fam)
@@ -96,9 +96,9 @@ process MISSINGNESS_HISTOGRAMS {
     label 'process_low'
 
     conda "${moduleDir}/../../conda/environment.yml"
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/r-base:4.3.1' :
-        'quay.io/biocontainers/r-base:4.3.1' }"
+    container "${ workflow.containerEngine == 'singularity' ?
+        'bioresource-qc.def' :
+        'bioresource-qc:latest' }"
 
     input:
     path(lmiss)
@@ -129,9 +129,9 @@ process ITERATIVE_MISSINGNESS {
     label 'process_high'
 
     conda "${moduleDir}/../../conda/environment.yml"
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/plink:1.90b6.21--h779adbc_1' :
-        'quay.io/biocontainers/plink:1.90b6.21--h779adbc_1' }"
+    container "${ workflow.containerEngine == 'singularity' ?
+        'bioresource-qc.def' :
+        'bioresource-qc:latest' }"
 
     input:
     tuple path(bed), path(bim), path(fam)
@@ -168,9 +168,9 @@ process ITERATIVE_MISSINGNESS_TABLE {
     label 'process_low'
 
     conda "${moduleDir}/../../conda/environment.yml"
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/r-base:4.3.1' :
-        'quay.io/biocontainers/r-base:4.3.1' }"
+    container "${ workflow.containerEngine == 'singularity' ?
+        'bioresource-qc.def' :
+        'bioresource-qc:latest' }"
 
     input:
     path(log_files)
@@ -234,9 +234,9 @@ process HWE_CHECK {
     label 'process_medium'
 
     conda "${moduleDir}/../../conda/environment.yml"
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/plink:1.90b6.21--h779adbc_1' :
-        'quay.io/biocontainers/plink:1.90b6.21--h779adbc_1' }"
+    container "${ workflow.containerEngine == 'singularity' ?
+        'bioresource-qc.def' :
+        'bioresource-qc:latest' }"
 
     input:
     tuple path(bed), path(bim), path(fam)
@@ -277,9 +277,9 @@ process HARDY_PLOTS {
     label 'process_low'
 
     conda "${moduleDir}/../../conda/environment.yml"
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/r-base:4.3.0' :
-        'quay.io/biocontainers/r-base:4.3.0' }"
+    container "${ workflow.containerEngine == 'singularity' ?
+        'bioresource-qc.def' :
+        'bioresource-qc:latest' }"
 
     input:
     path(hwe_file)
@@ -310,9 +310,9 @@ process HWE_FILTER {
     label 'process_medium'
 
     conda "${moduleDir}/../../conda/environment.yml"
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/plink:1.90b6.21--h779adbc_1' :
-        'quay.io/biocontainers/plink:1.90b6.21--h779adbc_1' }"
+    container "${ workflow.containerEngine == 'singularity' ?
+        'bioresource-qc.def' :
+        'bioresource-qc:latest' }"
 
     input:
     tuple path(bed), path(bim), path(fam)
