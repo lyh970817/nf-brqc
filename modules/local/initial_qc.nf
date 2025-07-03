@@ -8,7 +8,7 @@ process MAF_FILTER {
 
     conda "${moduleDir}/../../conda/environment.yml"
     container "${ workflow.containerEngine == 'singularity' ?
-        'bioresource-qc.def' :
+        'bioresource-qc.sif' :
         'bioresource-qc:latest' }"
 
     input:
@@ -51,7 +51,7 @@ process MISSINGNESS_CHECK {
 
     conda "${moduleDir}/../../conda/environment.yml"
     container "${ workflow.containerEngine == 'singularity' ?
-        'bioresource-qc.def' :
+        'bioresource-qc.sif' :
         'bioresource-qc:latest' }"
 
     input:
@@ -97,7 +97,7 @@ process MISSINGNESS_HISTOGRAMS {
 
     conda "${moduleDir}/../../conda/environment.yml"
     container "${ workflow.containerEngine == 'singularity' ?
-        'bioresource-qc.def' :
+        'bioresource-qc.sif' :
         'bioresource-qc:latest' }"
 
     input:
@@ -130,7 +130,7 @@ process ITERATIVE_MISSINGNESS {
 
     conda "${moduleDir}/../../conda/environment.yml"
     container "${ workflow.containerEngine == 'singularity' ?
-        'bioresource-qc.def' :
+        'bioresource-qc.sif' :
         'bioresource-qc:latest' }"
 
     input:
@@ -169,7 +169,7 @@ process ITERATIVE_MISSINGNESS_TABLE {
 
     conda "${moduleDir}/../../conda/environment.yml"
     container "${ workflow.containerEngine == 'singularity' ?
-        'bioresource-qc.def' :
+        'bioresource-qc.sif' :
         'bioresource-qc:latest' }"
 
     input:
@@ -235,7 +235,7 @@ process HWE_CHECK {
 
     conda "${moduleDir}/../../conda/environment.yml"
     container "${ workflow.containerEngine == 'singularity' ?
-        'bioresource-qc.def' :
+        'bioresource-qc.sif' :
         'bioresource-qc:latest' }"
 
     input:
@@ -278,7 +278,7 @@ process HARDY_PLOTS {
 
     conda "${moduleDir}/../../conda/environment.yml"
     container "${ workflow.containerEngine == 'singularity' ?
-        'bioresource-qc.def' :
+        'bioresource-qc.sif' :
         'bioresource-qc:latest' }"
 
     input:
@@ -311,7 +311,7 @@ process HWE_FILTER {
 
     conda "${moduleDir}/../../conda/environment.yml"
     container "${ workflow.containerEngine == 'singularity' ?
-        'bioresource-qc.def' :
+        'bioresource-qc.sif' :
         'bioresource-qc:latest' }"
 
     input:
