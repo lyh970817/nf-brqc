@@ -16,9 +16,10 @@ From: continuumio/miniconda3:latest
     singularity exec bioresource-qc.sif <command>
 
 %environment
-    export PATH=/opt/conda/bin:$PATH
+    export PATH=/opt/conda/envs/bioresource-qc/bin:/opt/conda/bin:$PATH
     export CONDA_DEFAULT_ENV=bioresource-qc
     export CONDA_PREFIX=/opt/conda/envs/bioresource-qc
+    source /opt/conda/bin/activate bioresource-qc
 
 %post
     # Update system packages
@@ -63,8 +64,6 @@ From: continuumio/miniconda3:latest
         pip \
         -y
 
-    # Install pip packages (matching environment.yml)
-    /opt/conda/bin/conda run -n bioresource-qc pip install optargs
 
     # Clean conda cache to reduce image size
     /opt/conda/bin/conda clean -all -y
@@ -72,9 +71,6 @@ From: continuumio/miniconda3:latest
     # Make conda environment the default
     echo "source activate bioresource-qc" >> ~/.bashrc
 
-%runscript
-    # Activate the conda environment and run the command
-    exec /opt/conda/bin/conda run -n bioresource-qc "$@"
 
 %test
     # Test that key software is available
