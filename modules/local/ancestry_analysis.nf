@@ -9,8 +9,8 @@ process ANCESTRY_ALLELE_MATCHING {
 
     conda "${moduleDir}/../../conda/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/r-base:4.3.0' :
-        'quay.io/biocontainers/r-base:4.3.0' }"
+        'bioresource-qc.sif' :
+        'bioresource-qc:latest' }"
 
     input:
     tuple val(meta), path(ref_bim_files)
@@ -111,8 +111,8 @@ process ANCESTRY_LONG_LD_REGIONS {
 
     conda "${moduleDir}/../../conda/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/r-base:4.3.0' :
-        'quay.io/biocontainers/r-base:4.3.0' }"
+        'bioresource-qc.sif' :
+        'bioresource-qc:latest' }"
 
     input:
     tuple val(meta), path(bim)
@@ -176,8 +176,8 @@ process ANCESTRY_PC_ANALYSIS {
 
     conda "${moduleDir}/../../conda/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/r-base:4.3.1' :
-        'quay.io/biocontainers/r-base:4.3.1' }"
+        'bioresource-qc.sif' :
+        'bioresource-qc:latest' }"
 
     input:
     tuple val(meta), path(ref_scores)
