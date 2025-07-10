@@ -131,36 +131,42 @@ workflow {
     ITERATIVE_MISSINGNESS(MISSINGNESS_CHECK.out.plink_files, 90, 99, 1)
     ITERATIVE_MISSINGNESS_TABLE(ITERATIVE_MISSINGNESS.out.logs, params.name)
 
-    // 3. Hardy-Weinberg analysis
-    HWE_CHECK(ITERATIVE_MISSINGNESS.out.plink_files)
-    HARDY_PLOTS(HWE_CHECK.out.hwe, params.name)
-    HWE_FILTER(ITERATIVE_MISSINGNESS.out.plink_files, params.hwe)
+    // 3. Select the 95% filtered files from iterative missingness
+    def selected_files = ITERATIVE_MISSINGNESS.out.plink_files
+                                              .filter { bed, bim, fam -> 
+                                                  bed.name.contains("sample${params.Sample_CR}.SNP${params.SNP_CR}") 
+                                              }
 
-    // 4. LD pruning
+    // 4. Hardy-Weinberg analysis
+    HWE_CHECK(selected_files)
+    HARDY_PLOTS(HWE_CHECK.out.hwe, params.name)
+    HWE_FILTER(selected_files, params.hwe)
+
+    // 5. LD pruning
     LD_PRUNING(HWE_FILTER.out.plink_files, 1500, 150, 0.2)
     EXTRACT_PRUNED_SNPS(HWE_FILTER.out.plink_files, LD_PRUNING.out.prune_in)
 
-    // 5. High LD regions and autosomal filtering
-    HIGH_LD_REGIONS_EXCLUDE(EXTRACT_PRUNED_SNPS.out.plink_files.map { bed, bim, fam -> bim }, "b38")
+    // 6. High LD regions and autosomal filtering
+    HIGH_LD_REGIONS_EXCLUDE(EXTRACT_PRUNED_SNPS.out.plink_files.map { bed, bim, fam -> bim }, params.build)
     EXCLUDE_HIGH_LD_AUTOSOMAL(EXTRACT_PRUNED_SNPS.out.plink_files, HIGH_LD_REGIONS_EXCLUDE.out.exclude_list)
 
-    // 6. Sex checks
-    SEX_CHECK_SPLIT_X(EXTRACT_PRUNED_SNPS.out.plink_files, "b38")
+    // 7. Sex checks
+    SEX_CHECK_SPLIT_X(EXTRACT_PRUNED_SNPS.out.plink_files, params.build)
     SEX_CHECK(SEX_CHECK_SPLIT_X.out.plink_files)
     SEX_CHECK_PLOTS(SEX_CHECK.out.sexcheck, params.name)
 
-    // 7. Heterozygosity analysis
+    // 8. Heterozygosity analysis
     HETEROZYGOSITY_CHECK(EXCLUDE_HIGH_LD_AUTOSOMAL.out.plink_files)
     HETEROZYGOSITY_PLOTS(HETEROZYGOSITY_CHECK.out.ibc, SEX_CHECK.out.sexcheck, params.name)
 
-    // 8. IBD analysis
+    // 9. IBD analysis
     IBD_CALCULATION(EXCLUDE_HIGH_LD_AUTOSOMAL.out.plink_files)
     IBD_OUTLIER_DETECTION(IBD_CALCULATION.out.genome, MISSINGNESS_CHECK.out.imiss, params.name, params.ibd)
     INDIVIDUAL_IBD_ANALYSIS(IBD_CALCULATION.out.genome, params.name, params.ind_ibd)
     IBD_HISTOGRAMS(IBD_CALCULATION.out.genome, params.name)
     INDIVIDUAL_IBD_HISTOGRAMS(IBD_CALCULATION.out.genome, params.ind_ibd)
 
-    // 9. Ancestry analysis (if reference data is available)
+    // 10. Ancestry analysis (if reference data is available)
     if (params.ref_1kg_dir && file(params.ref_1kg_dir).exists()) {
         // Create reference channel for chromosomes 1-22
         def ref_ch = Channel.from(1..22).map { chr ->
