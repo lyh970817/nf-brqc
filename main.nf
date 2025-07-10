@@ -133,9 +133,14 @@ workflow {
 
     // 3. Select the 95% filtered files from iterative missingness
     def selected_files = ITERATIVE_MISSINGNESS.out.plink_files
-                                              .filter { bed, bim, fam -> 
-                                                  bed.name.contains("sample${params.Sample_CR}.SNP${params.SNP_CR}") 
-                                              }
+        // break the (beds,bims,fams) lists into individual triples
+        .flatMap { beds, bims, fams ->
+            beds.indices.collect { i -> [ beds[i], bims[i], fams[i] ] }
+        }
+        // keep only the triple whose BED file matches the requested sample/SNP
+        .filter { bed, _bim, _fam ->
+            bed.name.contains("sample${params.Sample_CR}.SNP${params.SNP_CR}")
+        }
 
     // 4. Hardy-Weinberg analysis
     HWE_CHECK(selected_files)
@@ -147,7 +152,7 @@ workflow {
     EXTRACT_PRUNED_SNPS(HWE_FILTER.out.plink_files, LD_PRUNING.out.prune_in)
 
     // 6. High LD regions and autosomal filtering
-    HIGH_LD_REGIONS_EXCLUDE(EXTRACT_PRUNED_SNPS.out.plink_files.map { bed, bim, fam -> bim }, params.build)
+    HIGH_LD_REGIONS_EXCLUDE(EXTRACT_PRUNED_SNPS.out.plink_files.map { _bed, bim, _fam -> bim }, params.build)
     EXCLUDE_HIGH_LD_AUTOSOMAL(EXTRACT_PRUNED_SNPS.out.plink_files, HIGH_LD_REGIONS_EXCLUDE.out.exclude_list)
 
     // 7. Sex checks
