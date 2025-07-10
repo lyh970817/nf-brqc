@@ -134,7 +134,10 @@ workflow {
     // 3. Select the 95% filtered files from iterative missingness
     def selected_files = ITERATIVE_MISSINGNESS.out.plink_files
         // break the (beds,bims,fams) lists into individual triples
-        .flatMap { beds, bims, fams ->
+        .flatMap { plink_files ->
+            def beds = plink_files[0]
+            def bims = plink_files[1]
+            def fams = plink_files[2]
             beds.indices.collect { i -> [ beds[i], bims[i], fams[i] ] }
         }
         // keep only the triple whose BED file matches the requested sample/SNP
