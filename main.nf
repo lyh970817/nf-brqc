@@ -198,12 +198,12 @@ workflow runAncestryAnalysis {
 
     main:
     // Target QC for ancestry analysis
-    target_files.view { "Target files: $it" }
+    target_files.view()
     def sample_size = 1000  // This should be calculated from the actual data
     ANCESTRY_TARGET_QC(target_files, params.geno, params.maf, params.hwe, sample_size)
 
     // Process reference files for each chromosome
-    ANCESTRY_REF_INTERSECT(ref_files_ch, ANCESTRY_TARGET_QC.out.snplist.map { _meta, snplist -> snplist }, params.geno, params.maf, params.hwe, ref_files_ch.map { _meta, _pgen, _pvar, _psam, chr -> chr })
+    ANCESTRY_REF_INTERSECT(ref_files_ch, ANCESTRY_TARGET_QC.out.snplist.collect(), params.geno, params.maf, params.hwe)
 
     // Collect all reference intersect files
     def ref_intersect_files = ANCESTRY_REF_INTERSECT.out.plink_files.collect()

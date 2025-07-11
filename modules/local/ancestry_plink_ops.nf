@@ -109,12 +109,11 @@ process ANCESTRY_REF_INTERSECT {
         'bioresource-qc:latest' }"
 
     input:
-    tuple val(meta), path(ref_pgen), path(ref_pvar), path(ref_psam)
+    tuple val(meta), path(ref_pgen), path(ref_pvar), path(ref_psam), val(chr)
     path(target_snplist)
     val(geno_threshold)
     val(maf_threshold)
     val(hwe_threshold)
-    val(chr)
 
     output:
     tuple val(meta), path("ref_intersect_chr${chr}.pgen"), path("ref_intersect_chr${chr}.pvar"), path("ref_intersect_chr${chr}.psam"), emit: plink_files
