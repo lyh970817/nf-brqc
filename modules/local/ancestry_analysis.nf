@@ -182,7 +182,7 @@ process ANCESTRY_PC_ANALYSIS {
     path(ref_scores)
     path(target_scores)
     path(pop_data)
-    path(ref_pop_scale)
+    path(ref_pop_scale_dir)
     val(n_pcs)
     val(prob_thresh)
     val(output_name)
@@ -242,13 +242,15 @@ process ANCESTRY_PC_ANALYSIS {
     
     fwrite(PCs_ref_centre_scale, "${output_name}.scale", sep=' ')
     
-    # Process population-specific scaling if ref_pop_scale is provided
-    if(file.exists("${ref_pop_scale}")) {
-        pop_keep_files <- read.table("${ref_pop_scale}", header=F, stringsAsFactors=F)
+    # Process population-specific scaling if ref_pop_scale_dir is provided
+    if(dir.exists("${ref_pop_scale_dir}")) {
+        # Get all .keep files from the directory
+        keep_files <- list.files("${ref_pop_scale_dir}", pattern = "\\\\.keep\$", full.names = TRUE)
         
-        for(k in 1:dim(pop_keep_files)[1]){
-            pop <- pop_keep_files\$V1[k]
-            keep <- fread(pop_keep_files\$V2[k], header=F)
+        for(k in 1:length(keep_files)){
+            # Extract population name from filename (remove .keep extension)
+            pop <- gsub("\\\\.keep\$", "", basename(keep_files[k]))
+            keep <- fread(keep_files[k], header=F)
             PCs_ref_keep <- PCs_ref[(PCs_ref\$FID %in% keep\$V1),]
             
             PCs_ref_centre_scale_pop <- data.frame(PC=names(PCs_ref_keep[-1:-2]),
@@ -271,9 +273,11 @@ process ANCESTRY_PC_ANALYSIS {
         
         # Label individuals with ref_pop groups
         pop <- NULL
-        for(i in 1:dim(pop_keep_files)[1]){
-            keep <- fread(pop_keep_files\$V2[i], header=F)
-            keep\$pop <- pop_keep_files\$V1[i]
+        for(i in 1:length(keep_files)){
+            keep <- fread(keep_files[i], header=F)
+            # Extract population name from filename (remove .keep extension)
+            pop_name <- gsub("\\\\.keep\$", "", basename(keep_files[i]))
+            keep\$pop <- pop_name
             pop <- rbind(pop,keep)
         }
         names(pop) <- c('FID','IID','pop')

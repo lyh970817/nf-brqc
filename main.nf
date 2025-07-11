@@ -250,7 +250,7 @@ workflow runAncestryAnalysis {
     // PC analysis and population assignment
     ANCESTRY_PC_ANALYSIS(ANCESTRY_REF_SCORE.out.scores,
                         ANCESTRY_TARGET_SCORE.out.scores,
-                        file(params.pop_data), file(params.ref_pop_scale),
+                        file(params.pop_data), file(params.ref_pop_scale_dir),
                         params.n_pcs, params.prob_thresh, params.name)
 }
 
