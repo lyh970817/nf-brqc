@@ -8,8 +8,8 @@ process LD_PRUNING {
 
     conda "${moduleDir}/../../conda/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/plink:1.90b6.21--h779adbc_1' :
-        'quay.io/biocontainers/plink:1.90b6.21--h779adbc_1' }"
+        'bioresource-qc.sif' :
+        'bioresource-qc:latest' }"
 
     input:
     tuple path(bed), path(bim), path(fam)
@@ -55,8 +55,8 @@ process EXTRACT_PRUNED_SNPS {
 
     conda "${moduleDir}/../../conda/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/plink:1.90b6.21--h779adbc_1' :
-        'quay.io/biocontainers/plink:1.90b6.21--h779adbc_1' }"
+        'bioresource-qc.sif' :
+        'bioresource-qc:latest' }"
 
     input:
     tuple path(bed), path(bim), path(fam)
@@ -98,8 +98,8 @@ process HIGH_LD_REGIONS_EXCLUDE {
 
     conda "${moduleDir}/../../conda/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/gawk:5.1.0' :
-        'quay.io/biocontainers/gawk:5.1.0' }"
+        'bioresource-qc.sif' :
+        'bioresource-qc:latest' }"
 
     input:
     path(bim)
@@ -135,8 +135,8 @@ process EXCLUDE_HIGH_LD_AUTOSOMAL {
 
     conda "${moduleDir}/../../conda/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/plink:1.90b6.21--h779adbc_1' :
-        'quay.io/biocontainers/plink:1.90b6.21--h779adbc_1' }"
+        'bioresource-qc.sif' :
+        'bioresource-qc:latest' }"
 
     input:
     tuple path(bed), path(bim), path(fam)
@@ -178,8 +178,8 @@ process SEX_CHECK_SPLIT_X {
 
     conda "${moduleDir}/../../conda/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/plink:1.90b6.21--h779adbc_1' :
-        'quay.io/biocontainers/plink:1.90b6.21--h779adbc_1' }"
+        'bioresource-qc.sif' :
+        'bioresource-qc:latest' }"
 
     input:
     tuple path(bed), path(bim), path(fam)
@@ -221,8 +221,8 @@ process SEX_CHECK {
 
     conda "${moduleDir}/../../conda/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/plink:1.90b6.21--h779adbc_1' :
-        'quay.io/biocontainers/plink:1.90b6.21--h779adbc_1' }"
+        'bioresource-qc.sif' :
+        'bioresource-qc:latest' }"
 
     input:
     tuple path(bed), path(bim), path(fam)
@@ -300,8 +300,8 @@ process HETEROZYGOSITY_CHECK {
 
     conda "${moduleDir}/../../conda/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/plink:1.90b6.21--h779adbc_1' :
-        'quay.io/biocontainers/plink:1.90b6.21--h779adbc_1' }"
+        'bioresource-qc.sif' :
+        'bioresource-qc:latest' }"
 
     input:
     tuple path(bed), path(bim), path(fam)

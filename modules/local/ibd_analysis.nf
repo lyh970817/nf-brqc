@@ -8,8 +8,8 @@ process IBD_CALCULATION {
 
     conda "${moduleDir}/../../conda/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/plink:1.90b6.21--h779adbc_1' :
-        'quay.io/biocontainers/plink:1.90b6.21--h779adbc_1' }"
+        'bioresource-qc.sif' :
+        'bioresource-qc:latest' }"
 
     input:
     tuple path(bed), path(bim), path(fam)
@@ -51,8 +51,8 @@ process IBD_OUTLIER_DETECTION {
 
     conda "${moduleDir}/../../conda/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/gawk:5.1.0' :
-        'quay.io/biocontainers/gawk:5.1.0' }"
+        'bioresource-qc.sif' :
+        'bioresource-qc:latest' }"
 
     input:
     path(genome_file)
