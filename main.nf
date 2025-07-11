@@ -58,6 +58,7 @@ include { ANCESTRY_TARGET_SCORE } from './modules/local/ancestry_plink_ops'
 include { ANCESTRY_ALLELE_MATCHING } from './modules/local/ancestry_analysis'
 include { ANCESTRY_LONG_LD_REGIONS } from './modules/local/ancestry_analysis'
 include { ANCESTRY_PC_ANALYSIS } from './modules/local/ancestry_analysis'
+include { EXTRACT_SNPS_FROM_WEIGHTS } from './modules/local/ancestry_extract_snps'
 
 // Function to help with error handling
 def errorMessage() {
@@ -211,10 +212,17 @@ workflow runAncestryAnalysis {
         target_files.map { _bed, bim, _fam -> bim }.first()
     )
 
+    ANCESTRY_REF_INTERSECT.out.plink_files
+    .map { _meta, pgen, pvar, psam ->
+            [ pgen, pvar, psam ]                  // first build the list
+        }
+        .flatten()                         // then split list items
+        .collect()
+        .set { all_plink_paths }
+
     // Merge reference files
     ANCESTRY_REF_MERGE(
-        ANCESTRY_REF_INTERSECT.out.plink_files.collect() 
-            | map { files -> files.collect { it[1..3] }.flatten() },
+        all_plink_paths,
         ANCESTRY_ALLELE_MATCHING.out.match_snplist,
         ANCESTRY_ALLELE_MATCHING.out.flip_snplist.ifEmpty(file('NO_FILE'))
     )
@@ -232,21 +240,18 @@ workflow runAncestryAnalysis {
     ANCESTRY_PCA_WEIGHTS(ANCESTRY_EXTRACT_PRUNED.out.plink_files, params.n_pcs)
     ANCESTRY_REF_SCORE(ANCESTRY_EXTRACT_PRUNED.out.plink_files, ANCESTRY_PCA_WEIGHTS.out.allele_weights, params.n_pcs)
 
+    // Extract SNP list from weights file
+    EXTRACT_SNPS_FROM_WEIGHTS(ANCESTRY_PCA_WEIGHTS.out.allele_weights)
+
     // Score target samples
-    def score_snplist = ANCESTRY_PCA_WEIGHTS.out.allele_weights.map { weights ->
-        // Extract SNP list from weights file
-        file(weights.toString().replace('.eigenvec.allele', '_snplist.txt'))
-    }
     ANCESTRY_TARGET_SCORE(target_files, ANCESTRY_PCA_WEIGHTS.out.allele_weights,
-                         score_snplist, params.n_pcs, file('NO_FILE'))
+                         EXTRACT_SNPS_FROM_WEIGHTS.out.snp_list, params.n_pcs, file('NO_FILE'))
 
     // PC analysis and population assignment
-    if (params.pop_data && file(params.pop_data).exists()) {
-        ANCESTRY_PC_ANALYSIS(ANCESTRY_REF_SCORE.out.scores,
-                            ANCESTRY_TARGET_SCORE.out.scores,
-                            file(params.pop_data), file(params.ref_pop_scale),
-                            params.n_pcs, params.prob_thresh, params.name)
-    }
+    ANCESTRY_PC_ANALYSIS(ANCESTRY_REF_SCORE.out.scores,
+                        ANCESTRY_TARGET_SCORE.out.scores,
+                        file(params.pop_data), file(params.ref_pop_scale),
+                        params.n_pcs, params.prob_thresh, params.name)
 }
 
 
