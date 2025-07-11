@@ -199,7 +199,7 @@ process INDIVIDUAL_IBD_HISTOGRAMS {
     val(sd_threshold)
 
     output:
-    path("IndvIBD_Hist_*.pdf"), emit: plots
+    path("IndvIBD_hist_*.pdf"), emit: plots
     path "versions.yml", emit: versions
 
     when:
