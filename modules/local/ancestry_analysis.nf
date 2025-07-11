@@ -12,7 +12,7 @@ process ANCESTRY_ALLELE_MATCHING {
         'bioresource-qc:latest' }"
 
     input:
-    path(ref_bim_files)
+    path(ref_pvar_files)
     path(target_bim_file)
 
     output:
@@ -31,14 +31,16 @@ process ANCESTRY_ALLELE_MATCHING {
     
     library(data.table)
     
-    # Read reference bim files
+    # Read reference pvar files
     ref_bim <- NULL
-    ref_files <- list.files(pattern = "ref_intersect_chr.*\\\\.bim")
+    ref_files <- list.files(pattern = ".*\\\\.pvar")
     for(file in ref_files) {
-        ref_bim <- rbind(ref_bim, fread(file))
+        ref_data <- fread(file, skip = 1)  # Skip header line with ##
+        ref_bim <- rbind(ref_bim, ref_data)
     }
     
-    ref_bim <- ref_bim[,c('V1','V2','V4','V5','V6')]
+    # PVAR format: #CHROM POS ID REF ALT
+    ref_bim <- ref_bim[,c('V1','V3','V2','V4','V5')]
     names(ref_bim) <- c('CHR','SNP','BP','A1','A2')
     
     # Read target bim files

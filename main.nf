@@ -207,7 +207,7 @@ workflow runAncestryAnalysis {
 
     // Allele matching analysis
     ANCESTRY_ALLELE_MATCHING(
-        ANCESTRY_REF_INTERSECT.out.plink_files.map { meta, bed, bim, fam -> bim }.collect(),
+        ANCESTRY_REF_INTERSECT.out.plink_files.map { meta, pgen, pvar, psam -> pvar }.collect(),
         target_files.map { _bed, bim, _fam -> bim }.first()
     )
 
