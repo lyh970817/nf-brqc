@@ -207,24 +207,23 @@ workflow runAncestryAnalysis {
 
     // Allele matching analysis
     ANCESTRY_ALLELE_MATCHING(
-        ANCESTRY_REF_INTERSECT.out.plink_files.map { meta, bed, bim, fam -> [meta, bim] }.collect() 
-            | map { files -> [files[0][0], files.collect { it[1] }] },
-        target_files.map { _bed, bim, _fam -> bim }
+        ANCESTRY_REF_INTERSECT.out.plink_files.map { meta, bed, bim, fam -> bim }.collect(),
+        target_files.map { _bed, bim, _fam -> bim }.first()
     )
 
     // Merge reference files
     ANCESTRY_REF_MERGE(
         ANCESTRY_REF_INTERSECT.out.plink_files.collect() 
             | map { files -> [files[0][0], files.collect { it[1..3] }.flatten()] },
-        ANCESTRY_ALLELE_MATCHING.out.match_snplist.map { _meta, snplist -> snplist },
-        ANCESTRY_ALLELE_MATCHING.out.flip_snplist.map { _meta, snplist -> snplist }.ifEmpty(file('NO_FILE'))
+        ANCESTRY_ALLELE_MATCHING.out.match_snplist,
+        ANCESTRY_ALLELE_MATCHING.out.flip_snplist.ifEmpty(file('NO_FILE'))
     )
 
     // Long LD regions exclusion
-    ANCESTRY_LONG_LD_REGIONS(ANCESTRY_REF_MERGE.out.plink_files.map { _meta, _pgen, pvar, _psam -> [_meta, pvar] })
+    ANCESTRY_LONG_LD_REGIONS(ANCESTRY_REF_MERGE.out.plink_files.map { _meta, _pgen, pvar, _psam -> pvar })
 
     // LD pruning
-    ANCESTRY_LD_PRUNE(ANCESTRY_REF_MERGE.out.plink_files, ANCESTRY_LONG_LD_REGIONS.out.exclude_list.map { _meta, exclude -> exclude })
+    ANCESTRY_LD_PRUNE(ANCESTRY_REF_MERGE.out.plink_files, ANCESTRY_LONG_LD_REGIONS.out.exclude_list)
 
     // Extract pruned SNPs
     ANCESTRY_EXTRACT_PRUNED(ANCESTRY_REF_MERGE.out.plink_files, ANCESTRY_LD_PRUNE.out.prune_files.map { _meta, prune_in, _prune_out -> prune_in })
@@ -243,7 +242,8 @@ workflow runAncestryAnalysis {
 
     // PC analysis and population assignment
     if (params.pop_data && file(params.pop_data).exists()) {
-        ANCESTRY_PC_ANALYSIS(ANCESTRY_REF_SCORE.out.scores, ANCESTRY_TARGET_SCORE.out.scores,
+        ANCESTRY_PC_ANALYSIS(ANCESTRY_REF_SCORE.out.scores.map { _meta, scores -> scores },
+                            ANCESTRY_TARGET_SCORE.out.scores.map { _meta, scores -> scores },
                             file(params.pop_data), file(params.ref_pop_scale),
                             params.n_pcs, params.prob_thresh, params.name)
     }

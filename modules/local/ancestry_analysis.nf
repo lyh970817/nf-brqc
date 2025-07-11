@@ -4,7 +4,6 @@
  */
 
 process ANCESTRY_ALLELE_MATCHING {
-    tag "$meta.id"
     label 'process_medium'
 
     conda "${moduleDir}/../../conda/environment.yml"
@@ -13,12 +12,12 @@ process ANCESTRY_ALLELE_MATCHING {
         'bioresource-qc:latest' }"
 
     input:
-    tuple val(meta), path(ref_bim_files)
-    path(target_bim_files)
+    path(ref_bim_files)
+    path(target_bim_file)
 
     output:
-    tuple val(meta), path("ref_allele_match.snplist"), emit: match_snplist
-    tuple val(meta), path("ref_flip.snplist"), emit: flip_snplist, optional: true
+    path("ref_allele_match.snplist"), emit: match_snplist
+    path("ref_flip.snplist"), emit: flip_snplist, optional: true
     path "versions.yml", emit: versions
 
     when:
@@ -106,7 +105,6 @@ process ANCESTRY_ALLELE_MATCHING {
 }
 
 process ANCESTRY_LONG_LD_REGIONS {
-    tag "$meta.id"
     label 'process_low'
 
     conda "${moduleDir}/../../conda/environment.yml"
@@ -115,10 +113,10 @@ process ANCESTRY_LONG_LD_REGIONS {
         'bioresource-qc:latest' }"
 
     input:
-    tuple val(meta), path(bim)
+    path(bim)
 
     output:
-    tuple val(meta), path("long_ld.exclude"), emit: exclude_list
+    path("long_ld.exclude"), emit: exclude_list
     path "versions.yml", emit: versions
 
     when:
@@ -171,7 +169,6 @@ process ANCESTRY_LONG_LD_REGIONS {
 }
 
 process ANCESTRY_PC_ANALYSIS {
-    tag "$meta.id"
     label 'process_high'
 
     conda "${moduleDir}/../../conda/environment.yml"
@@ -180,8 +177,8 @@ process ANCESTRY_PC_ANALYSIS {
         'bioresource-qc:latest' }"
 
     input:
-    tuple val(meta), path(ref_scores)
-    tuple val(meta2), path(target_scores)
+    path(ref_scores)
+    path(target_scores)
     path(pop_data)
     path(ref_pop_scale)
     val(n_pcs)
@@ -189,14 +186,14 @@ process ANCESTRY_PC_ANALYSIS {
     val(output_name)
 
     output:
-    tuple val(meta), path("${output_name}.eigenvec"), emit: ref_eigenvec
-    tuple val(meta), path("${output_name}.scale"), emit: scale_file
-    tuple val(meta), path("${output_name}.*.scale"), emit: pop_scale_files, optional: true
-    tuple val(meta), path("${output_name}.pop_model.rds"), emit: model, optional: true
-    tuple val(meta), path("${output_name}.model_pred"), emit: model_pred, optional: true
-    tuple val(meta), path("${output_name}.*.keep"), emit: keep_files
-    tuple val(meta), path("${output_name}.*.eigenvec"), emit: pop_eigenvec
-    tuple val(meta), path("${output_name}.PCs_plot_*.png"), emit: plots
+    path("${output_name}.eigenvec"), emit: ref_eigenvec
+    path("${output_name}.scale"), emit: scale_file
+    path("${output_name}.*.scale"), emit: pop_scale_files, optional: true
+    path("${output_name}.pop_model.rds"), emit: model, optional: true
+    path("${output_name}.model_pred"), emit: model_pred, optional: true
+    path("${output_name}.*.keep"), emit: keep_files
+    path("${output_name}.*.eigenvec"), emit: pop_eigenvec
+    path("${output_name}.PCs_plot_*.png"), emit: plots
     path("${output_name}.log"), emit: log
     path "versions.yml", emit: versions
 
