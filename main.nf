@@ -209,7 +209,7 @@ workflow runAncestryAnalysis {
     ANCESTRY_ALLELE_MATCHING(
         ANCESTRY_REF_INTERSECT.out.plink_files.map { meta, bed, bim, fam -> [meta, bim] }.collect() 
             | map { files -> [files[0][0], files.collect { it[1] }] },
-        target_files.map { _bed, bim, _fam -> [[:], bim] }
+        target_files.map { _bed, bim, _fam -> bim }
     )
 
     // Merge reference files

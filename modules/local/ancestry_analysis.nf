@@ -14,7 +14,7 @@ process ANCESTRY_ALLELE_MATCHING {
 
     input:
     tuple val(meta), path(ref_bim_files)
-    tuple val(meta2), path(target_bim_files)
+    path(target_bim_files)
 
     output:
     tuple val(meta), path("ref_allele_match.snplist"), emit: match_snplist
