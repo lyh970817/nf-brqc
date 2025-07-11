@@ -193,6 +193,7 @@ process ANCESTRY_PC_ANALYSIS {
     path("${output_name}.*.scale"), emit: pop_scale_files, optional: true
     path("${output_name}.pop_model.rds"), emit: model, optional: true
     path("${output_name}.model_pred"), emit: model_pred, optional: true
+    path("${output_name}.*.keep"), emit: keep_files
     path("${output_name}.*.eigenvec"), emit: pop_eigenvec
     path("${output_name}.PCs_plot_*.png"), emit: plots
     path("${output_name}.log"), emit: log
@@ -294,6 +295,114 @@ process ANCESTRY_PC_ANALYSIS {
                                            summaryFunction = multiClassSummary))
         
         saveRDS(model\$finalModel, "${output_name}.pop_model.rds")
+        
+        # Generate predictions for target samples
+        sink(file = "${output_name}.log", append = T)
+        cat('Generating population predictions...\\n')
+        sink()
+        
+        # Read in target PC scores
+        target_PCs <- data.frame(fread("${target_scores}"))
+        # Target scores from plink2 --score have format: FID IID ALLELE_CT NAMED_ALLELE_DOSAGE_SUM PC1 PC2 ...
+        target_PCs <- target_PCs[,c(1:2,5:dim(target_PCs)[2])]
+        names(target_PCs) <- c('FID','IID',paste0('PC',1:${n_pcs}))
+        
+        # Scale target PCs using reference scaling
+        target_PCs_scaled <- target_PCs
+        for(i in 1:dim(PCs_ref_centre_scale)[1]){
+            target_PCs_scaled[[paste0('PC',i)]] <- target_PCs[[paste0('PC',i)]]-PCs_ref_centre_scale\$Mean[PCs_ref_centre_scale\$PC == paste0('PC',i)]
+            target_PCs_scaled[[paste0('PC',i)]] <- target_PCs_scaled[[paste0('PC',i)]]/PCs_ref_centre_scale\$SD[PCs_ref_centre_scale\$PC == paste0('PC',i)]
+        }
+        
+        # Generate predictions
+        pop_model_pred <- predict(object = model\$finalModel, newx = data.matrix(target_PCs_scaled[grepl('PC',names(target_PCs_scaled))]), type = "response", s=model\$finalModel\$lambdaOpt)
+        pop_model_pred <- as.data.frame.table(pop_model_pred)
+        pop_model_pred <- data.table(FID=target_PCs_scaled\$FID,
+                                    IID=target_PCs_scaled\$IID,
+                                    pop=as.character(pop_model_pred\$Var2),
+                                    prob=round(pop_model_pred\$Freq,3))
+        
+        pop_model_pred <- dcast.data.table(pop_model_pred, formula=FID + IID~pop, value.var = "prob")
+        fwrite(pop_model_pred, "${output_name}.model_pred", sep='\\t')
+        
+        # Create keep files based on predictions
+        if(${prob_thresh} > 0){
+            pop_model_pred\$max_prob <- apply(pop_model_pred[,-1:-2], 1, max)
+            pop_model_pred <- pop_model_pred[pop_model_pred\$max_prob > ${prob_thresh},]
+            pop_model_pred\$max_prob <- NULL
+        }
+        
+        # Generate population-specific eigenvec files and keep files
+        for(i in names(pop_model_pred[,-1:-2])){
+            tmp_keep <- pop_model_pred[apply(pop_model_pred[,-1:-2], 1, function(x) x[i] == max(x)),1:2]
+            fwrite(tmp_keep, paste0("${output_name}.", i, ".keep"), sep=' ', col.names=F)
+            
+            # Generate population-specific scaled eigenvec files
+            if(length(keep_files) > 0){
+                # Find matching keep file for this population
+                pop_keep_idx <- which(gsub("\\\\.keep\$", "", basename(keep_files)) == i)
+                if(length(pop_keep_idx) > 0){
+                    pop_scale_file <- paste0("${output_name}.", i, ".scale")
+                    if(file.exists(pop_scale_file)){
+                        pop_scale <- fread(pop_scale_file)
+                        target_PCs_pop_scaled <- target_PCs
+                        for(j in 1:dim(pop_scale)[1]){
+                            target_PCs_pop_scaled[[paste0('PC',j)]] <- target_PCs[[paste0('PC',j)]]-pop_scale\$Mean[pop_scale\$PC == paste0('PC',j)]
+                            target_PCs_pop_scaled[[paste0('PC',j)]] <- target_PCs_pop_scaled[[paste0('PC',j)]]/pop_scale\$SD[pop_scale\$PC == paste0('PC',j)]
+                            target_PCs_pop_scaled[[paste0('PC',j)]] <- round(target_PCs_pop_scaled[[paste0('PC',j)]],3)
+                        }
+                        fwrite(target_PCs_pop_scaled, paste0("${output_name}.", i, ".eigenvec"), sep='\\t')
+                    }
+                }
+            }
+        }
+        
+        # Create plots
+        sink(file = "${output_name}.log", append = T)
+        cat('Creating PCA plots...\\n')
+        sink()
+        
+        # Read in population data
+        pop_data <- data.frame(fread("${pop_data}"))
+        names(pop_data)[1] <- 'IID'
+        pop_data\$FID <- pop_data\$IID
+        
+        # Merge reference PCs with population data
+        ref_PCs_plot <- merge(PCs_ref, pop_data, by=c('FID','IID'))
+        
+        # Add target data
+        new_cols <- names(ref_PCs_plot[!grepl('PC|ID', names(ref_PCs_plot))])
+        new_cols_df <- data.frame(matrix(rep('Target',length(new_cols)),ncol=length(new_cols)))
+        names(new_cols_df) <- new_cols
+        target_PCs_plot <- cbind(target_PCs, new_cols_df)
+        
+        # Combine reference and target
+        ref_target_PCs <- rbind(ref_PCs_plot, target_PCs_plot)
+        
+        # Create plots for each population column
+        Label_groups <- names(ref_target_PCs[!grepl('PC|IID|FID',names(ref_target_PCs))])
+        
+        for(i in Label_groups){
+            PC_1_2 <- ggplot(ref_target_PCs[ref_target_PCs[[i]] != 'Target',], aes(x=PC1,y=PC2, colour=get(i))) +
+                geom_point() +
+                geom_point(data=ref_target_PCs[ref_target_PCs[[i]] == 'Target',], aes(x=PC1,y=PC2), colour='black', shape=21) +
+                ggtitle("PCs 1 and 2") +
+                labs(colour="")
+            
+            PC_3_4 <- ggplot(ref_target_PCs[ref_target_PCs[[i]] != 'Target',], aes(x=PC3,y=PC4, colour=get(i))) +
+                geom_point() +
+                geom_point(data=ref_target_PCs[ref_target_PCs[[i]] == 'Target',], aes(x=PC3,y=PC4), colour='black', shape=21) +
+                ggtitle("PCs 3 and 4") +
+                labs(colour="")
+            
+            png(paste0("${output_name}.PCs_plot_", i, ".png"), units='px', res=300, width=4000, height=2500)
+            print(plot_grid(PC_1_2,PC_3_4))
+            dev.off()
+        }
+        
+        sink(file = "${output_name}.log", append = T)
+        cat('Plots created successfully\\n')
+        sink()
     }
     
     # Write versions
