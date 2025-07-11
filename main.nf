@@ -179,9 +179,9 @@ workflow {
         // Create reference channel for chromosomes 1-22
         def ref_ch = Channel.from(1..22).map { chr ->
             def ref_meta = [id: "ref.chr${chr}"]
-            def ref_pgen = file("${params.ref_1kg_dir}/1KG_Phase3.chr${chr}.pgen")
-            def ref_pvar = file("${params.ref_1kg_dir}/1KG_Phase3.chr${chr}.pvar")
-            def ref_psam = file("${params.ref_1kg_dir}/1KG_Phase3.chr${chr}.psam")
+            def ref_pgen = file("${params.ref_1kg_dir}/ref.chr${chr}.pgen")
+            def ref_pvar = file("${params.ref_1kg_dir}/ref.chr${chr}.pvar")
+            def ref_psam = file("${params.ref_1kg_dir}/ref.chr${chr}.psam")
             [ref_meta, ref_pgen, ref_pvar, ref_psam, chr]
         }
 
