@@ -109,7 +109,7 @@ process ANCESTRY_REF_INTERSECT {
         'bioresource-qc:latest' }"
 
     input:
-    tuple val(meta), path(ref_bed), path(ref_bim), path(ref_fam)
+    tuple val(meta), path(ref_pgen), path(ref_pvar), path(ref_psam)
     path(target_snplist)
     val(geno_threshold)
     val(maf_threshold)
@@ -117,7 +117,7 @@ process ANCESTRY_REF_INTERSECT {
     val(chr)
 
     output:
-    tuple val(meta), path("ref_intersect_chr${chr}.bed"), path("ref_intersect_chr${chr}.bim"), path("ref_intersect_chr${chr}.fam"), emit: plink_files
+    tuple val(meta), path("ref_intersect_chr${chr}.pgen"), path("ref_intersect_chr${chr}.pvar"), path("ref_intersect_chr${chr}.psam"), emit: plink_files
     path "versions.yml", emit: versions
 
     when:
@@ -125,16 +125,16 @@ process ANCESTRY_REF_INTERSECT {
 
     script:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${meta.id}"
+    def prefix = task.ext.prefix ?: "${ref_pgen.baseName}"
     def memory = task.memory ? "--memory ${task.memory.toMega()}" : ""
     
     """
-    plink \\
-        --bfile ${prefix} \\
+    plink2 \\
+        --pfile ${prefix} \\
         --geno ${geno_threshold} \\
         --maf ${maf_threshold} \\
         --hwe ${hwe_threshold} \\
-        --make-bed \\
+        --make-pgen \\
         --extract ${target_snplist} \\
         --allow-extra-chr \\
         --out ref_intersect_chr${chr} \\
@@ -143,7 +143,7 @@ process ANCESTRY_REF_INTERSECT {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        plink: \$(plink --version 2>&1 | sed 's/^PLINK //; s/64-bit.*//')
+        plink2: \$(plink2 --version 2>&1 | sed 's/^PLINK //; s/ .*//')
     END_VERSIONS
     """
 }
@@ -163,7 +163,7 @@ process ANCESTRY_REF_MERGE {
     path(flip_snplist)
 
     output:
-    tuple val(meta), path("ref_merge.bed"), path("ref_merge.bim"), path("ref_merge.fam"), emit: plink_files
+    tuple val(meta), path("ref_merge.pgen"), path("ref_merge.pvar"), path("ref_merge.psam"), emit: plink_files
     path "versions.yml", emit: versions
 
     when:
@@ -176,13 +176,13 @@ process ANCESTRY_REF_MERGE {
     
     """
     # Create merge list
-    ls ref_intersect_chr*.bed | sed 's/.bed//' > ref_mergelist.txt
+    ls ref_intersect_chr*.pgen | sed 's/.pgen//' > ref_mergelist.txt
 
-    plink \\
-        --merge-list ref_mergelist.txt \\
+    plink2 \\
+        --pmerge-list ref_mergelist.txt \\
         --extract ${allele_match_snplist} \\
         ${flip_arg} \\
-        --make-bed \\
+        --make-pgen \\
         --allow-extra-chr \\
         --out ref_merge \\
         ${memory} \\
@@ -190,7 +190,7 @@ process ANCESTRY_REF_MERGE {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        plink: \$(plink --version 2>&1 | sed 's/^PLINK //; s/64-bit.*//')
+        plink2: \$(plink2 --version 2>&1 | sed 's/^PLINK //; s/ .*//')
     END_VERSIONS
     """
 }
