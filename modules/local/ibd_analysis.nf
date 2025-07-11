@@ -90,8 +90,16 @@ process IBD_OUTLIER_DETECTION {
     paste pihat_over_9_${study_name}_header.txt extra_header.txt > callrate_pihat_over_9_${study_name}_header.txt
     
     # Sort and join pihat and call rate files
-    join -1 1 -2 1 -o 1.1,1.2,1.3,1.4,1.5,1.6,1.7,1.8,1.9,1.10,1.11,1.12,1.13,1.14,2.6 <(sort -k1 pihat_over_9_${study_name}.txt) <(sort -k1 ${imiss_file}) > callrate1_pihat_over_9_${study_name}.txt
-    join -1 3 -2 1 -o 1.1,1.2,1.3,1.4,1.5,1.6,1.7,1.8,1.9,1.10,1.11,1.12,1.13,1.14,1.15,2.6 <(sort -k3 callrate1_pihat_over_9_${study_name}.txt) <(sort -k1 ${imiss_file}) > callrate2_pihat_over_9_${study_name}.txt
+    # First, sort the files separately to ensure proper ordering
+    sort -k1,1 pihat_over_9_${study_name}.txt > pihat_over_9_${study_name}_sorted.txt
+    sort -k1,1 ${imiss_file} > ${imiss_file}_sorted.txt
+    
+    # Join on first field (FID1)
+    join -1 1 -2 1 -o 1.1,1.2,1.3,1.4,1.5,1.6,1.7,1.8,1.9,1.10,1.11,1.12,1.13,1.14,2.6 pihat_over_9_${study_name}_sorted.txt ${imiss_file}_sorted.txt > callrate1_pihat_over_9_${study_name}.txt
+    
+    # Sort by third field (IID2) and join again
+    sort -k3,3 callrate1_pihat_over_9_${study_name}.txt > callrate1_pihat_over_9_${study_name}_sorted.txt
+    join -1 3 -2 1 -o 1.1,1.2,1.3,1.4,1.5,1.6,1.7,1.8,1.9,1.10,1.11,1.12,1.13,1.14,1.15,2.6 callrate1_pihat_over_9_${study_name}_sorted.txt ${imiss_file}_sorted.txt > callrate2_pihat_over_9_${study_name}.txt
     sort -k1 callrate2_pihat_over_9_${study_name}.txt > callrate3_pihat_over_9_${study_name}.txt
     
     # Attach new header
@@ -103,6 +111,9 @@ process IBD_OUTLIER_DETECTION {
     rm ./callrate2_pihat_over_9_${study_name}.txt
     rm ./callrate3_pihat_over_9_${study_name}.txt
     rm ./pihat_over_9_${study_name}_header.txt
+    rm ./pihat_over_9_${study_name}_sorted.txt
+    rm ./callrate1_pihat_over_9_${study_name}_sorted.txt
+    rm ./${imiss_file}_sorted.txt
     
     # Remove one sample from each pair with pi-hat (% IBD) above threshold
     awk -v ibd="${ibd_threshold}" '\$10 >= ibd {print \$1, \$2}' ${genome_file} > ${prefix}.IBD_outliers.txt
