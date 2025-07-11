@@ -224,8 +224,13 @@ process ANCESTRY_PC_ANALYSIS {
     
     # Read in reference PC scores
     PCs_ref <- data.frame(fread("${ref_scores}"))
-    PCs_ref <- PCs_ref[,c(1:2,5:dim(PCs_ref)[2])]
-    names(PCs_ref) <- c('FID','IID',paste0('PC',1:${n_pcs}))
+    # Extract IID (column 1) and PC columns (starting from column 7)
+    pc_start_col <- 7
+    pc_end_col <- pc_start_col + ${n_pcs} - 1
+    PCs_ref <- PCs_ref[,c(1, pc_start_col:pc_end_col)]
+    names(PCs_ref) <- c('IID', paste0('PC',1:${n_pcs}))
+    # Add FID column (duplicate of IID for compatibility)
+    PCs_ref <- data.frame(FID=PCs_ref$IID, PCs_ref)
     
     fwrite(PCs_ref, "${output_name}.eigenvec", sep=' ')
     
