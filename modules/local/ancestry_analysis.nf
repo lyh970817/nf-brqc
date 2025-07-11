@@ -230,7 +230,7 @@ process ANCESTRY_PC_ANALYSIS {
     PCs_ref <- PCs_ref[,c(1, pc_start_col:pc_end_col)]
     names(PCs_ref) <- c('IID', paste0('PC',1:${n_pcs}))
     # Add FID column (duplicate of IID for compatibility)
-    PCs_ref <- data.frame(FID=PCs_ref$IID, PCs_ref)
+    PCs_ref <- data.frame(FID=PCs_ref[,1], PCs_ref)
     
     fwrite(PCs_ref, "${output_name}.eigenvec", sep=' ')
     
