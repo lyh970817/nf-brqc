@@ -205,16 +205,20 @@ workflow runAncestryAnalysis {
     // Process reference files for each chromosome
     ANCESTRY_REF_INTERSECT(ref_files_ch, ANCESTRY_TARGET_QC.out.snplist.collect(), params.geno, params.maf, params.hwe)
 
-    // Collect all reference intersect files
-    def ref_intersect_files = ANCESTRY_REF_INTERSECT.out.plink_files.collect()
-
     // Allele matching analysis
-    ANCESTRY_ALLELE_MATCHING(ref_intersect_files.map { files -> [files[0][0], files.collect { it[1] }] }, target_files.map { _meta, _bed, bim, _fam -> [_meta, [bim]] })
+    ANCESTRY_ALLELE_MATCHING(
+        ANCESTRY_REF_INTERSECT.out.plink_files.map { meta, bed, bim, fam -> [meta, bim] }.collect() 
+            | map { files -> [files[0][0], files.collect { it[1] }] },
+        target_files.map { _bed, bim, _fam -> [[:], bim] }
+    )
 
     // Merge reference files
-    ANCESTRY_REF_MERGE(ref_intersect_files.map { files -> [files[0][0], files.collect { it[1..3] }.flatten()] },
-                      ANCESTRY_ALLELE_MATCHING.out.match_snplist.map { _meta, snplist -> snplist },
-                      ANCESTRY_ALLELE_MATCHING.out.flip_snplist.map { _meta, snplist -> snplist }.ifEmpty(file('NO_FILE')))
+    ANCESTRY_REF_MERGE(
+        ANCESTRY_REF_INTERSECT.out.plink_files.collect() 
+            | map { files -> [files[0][0], files.collect { it[1..3] }.flatten()] },
+        ANCESTRY_ALLELE_MATCHING.out.match_snplist.map { _meta, snplist -> snplist },
+        ANCESTRY_ALLELE_MATCHING.out.flip_snplist.map { _meta, snplist -> snplist }.ifEmpty(file('NO_FILE'))
+    )
 
     // Long LD regions exclusion
     ANCESTRY_LONG_LD_REGIONS(ANCESTRY_REF_MERGE.out.plink_files.map { _meta, _pgen, pvar, _psam -> [_meta, pvar] })
