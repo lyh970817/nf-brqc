@@ -148,7 +148,6 @@ process ANCESTRY_REF_INTERSECT {
 }
 
 process ANCESTRY_REF_MERGE {
-    tag "$meta.id"
     label 'process_high'
 
     conda "${moduleDir}/../../conda/environment.yml"
@@ -157,12 +156,12 @@ process ANCESTRY_REF_MERGE {
         'bioresource-qc:latest' }"
 
     input:
-    tuple val(meta), path(ref_files)
+    path(ref_files)
     path(allele_match_snplist)
     path(flip_snplist)
 
     output:
-    tuple val(meta), path("ref_merge.pgen"), path("ref_merge.pvar"), path("ref_merge.psam"), emit: plink_files
+    tuple path("ref_merge.pgen"), path("ref_merge.pvar"), path("ref_merge.psam"), emit: plink_files
     path "versions.yml", emit: versions
 
     when:
@@ -195,7 +194,6 @@ process ANCESTRY_REF_MERGE {
 }
 
 process ANCESTRY_LD_PRUNE {
-    tag "$meta.id"
     label 'process_medium'
 
     conda "${moduleDir}/../../conda/environment.yml"
@@ -204,11 +202,11 @@ process ANCESTRY_LD_PRUNE {
         'bioresource-qc:latest' }"
 
     input:
-    tuple val(meta), path(bed), path(bim), path(fam)
+    tuple path(pgen), path(pvar), path(psam)
     path(long_ld_exclude)
 
     output:
-    tuple val(meta), path("ref_merge.prune.in"), path("ref_merge.prune.out"), emit: prune_files
+    tuple path("ref_merge.prune.in"), path("ref_merge.prune.out"), emit: prune_files
     path "versions.yml", emit: versions
 
     when:
@@ -216,12 +214,12 @@ process ANCESTRY_LD_PRUNE {
 
     script:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${meta.id}"
+    def prefix = pgen.baseName
     def memory = task.memory ? "--memory ${task.memory.toMega()}" : ""
     
     """
-    plink \\
-        --bfile ${prefix} \\
+    plink2 \\
+        --pfile ${prefix} \\
         --exclude ${long_ld_exclude} \\
         --indep-pairwise 1000 5 0.2 \\
         --allow-extra-chr \\
@@ -231,13 +229,12 @@ process ANCESTRY_LD_PRUNE {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        plink: \$(plink --version 2>&1 | sed 's/^PLINK //; s/64-bit.*//')
+        plink2: \$(plink2 --version 2>&1 | sed 's/^PLINK //; s/ .*//')
     END_VERSIONS
     """
 }
 
 process ANCESTRY_EXTRACT_PRUNED {
-    tag "$meta.id"
     label 'process_medium'
 
     conda "${moduleDir}/../../conda/environment.yml"
@@ -246,11 +243,11 @@ process ANCESTRY_EXTRACT_PRUNED {
         'bioresource-qc:latest' }"
 
     input:
-    tuple val(meta), path(bed), path(bim), path(fam)
+    tuple path(pgen), path(pvar), path(psam)
     path(prune_in)
 
     output:
-    tuple val(meta), path("ref_merge_pruned.bed"), path("ref_merge_pruned.bim"), path("ref_merge_pruned.fam"), emit: plink_files
+    tuple path("ref_merge_pruned.pgen"), path("ref_merge_pruned.pvar"), path("ref_merge_pruned.psam"), emit: plink_files
     path "versions.yml", emit: versions
 
     when:
@@ -258,14 +255,14 @@ process ANCESTRY_EXTRACT_PRUNED {
 
     script:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${meta.id}"
+    def prefix = pgen.baseName
     def memory = task.memory ? "--memory ${task.memory.toMega()}" : ""
     
     """
-    plink \\
-        --bfile ${prefix} \\
+    plink2 \\
+        --pfile ${prefix} \\
         --extract ${prune_in} \\
-        --make-bed \\
+        --make-pgen \\
         --allow-extra-chr \\
         --out ref_merge_pruned \\
         ${memory} \\
@@ -273,13 +270,12 @@ process ANCESTRY_EXTRACT_PRUNED {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        plink: \$(plink --version 2>&1 | sed 's/^PLINK //; s/64-bit.*//')
+        plink2: \$(plink2 --version 2>&1 | sed 's/^PLINK //; s/ .*//')
     END_VERSIONS
     """
 }
 
 process ANCESTRY_PCA_WEIGHTS {
-    tag "$meta.id"
     label 'process_high'
 
     conda "${moduleDir}/../../conda/environment.yml"
@@ -288,11 +284,11 @@ process ANCESTRY_PCA_WEIGHTS {
         'bioresource-qc:latest' }"
 
     input:
-    tuple val(meta), path(bed), path(bim), path(fam)
+    tuple path(pgen), path(pvar), path(psam)
     val(n_pcs)
 
     output:
-    tuple val(meta), path("ref_merge_pruned.eigenvec.allele"), emit: allele_weights
+    path("ref_merge_pruned.eigenvec.allele"), emit: allele_weights
     path("ref_merge_pruned.eigenval"), emit: eigenval
     path "versions.yml", emit: versions
 
@@ -301,12 +297,12 @@ process ANCESTRY_PCA_WEIGHTS {
 
     script:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${meta.id}"
+    def prefix = pgen.baseName
     def memory = task.memory ? "--memory ${task.memory.toMega()}" : ""
 
     """
     plink2 \\
-        --bfile ${prefix} \\
+        --pfile ${prefix} \\
         --pca ${n_pcs} allele-wts \\
         --allow-extra-chr \\
         --out ref_merge_pruned \\
@@ -321,7 +317,6 @@ process ANCESTRY_PCA_WEIGHTS {
 }
 
 process ANCESTRY_REF_SCORE {
-    tag "$meta.id"
     label 'process_high'
 
     conda "${moduleDir}/../../conda/environment.yml"
@@ -330,12 +325,12 @@ process ANCESTRY_REF_SCORE {
         'bioresource-qc:latest' }"
 
     input:
-    tuple val(meta), path(bed), path(bim), path(fam)
+    tuple path(pgen), path(pvar), path(psam)
     path(allele_weights)
     val(n_pcs)
 
     output:
-    tuple val(meta), path("ref_merge_pruned_score.sscore"), emit: scores
+    path("ref_merge_pruned_score.sscore"), emit: scores
     path "versions.yml", emit: versions
 
     when:
@@ -343,13 +338,13 @@ process ANCESTRY_REF_SCORE {
 
     script:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${meta.id}"
+    def prefix = pgen.baseName
     def memory = task.memory ? "--memory ${task.memory.toMega()}" : ""
     def score_cols = "6-${n_pcs + 5}"
 
     """
     plink2 \\
-        --bfile ${prefix} \\
+        --pfile ${prefix} \\
         --score ${allele_weights} header-read 2 5 \\
         --score-col-nums ${score_cols} \\
         --allow-extra-chr \\
@@ -365,7 +360,6 @@ process ANCESTRY_REF_SCORE {
 }
 
 process ANCESTRY_TARGET_SCORE {
-    tag "$meta.id"
     label 'process_high'
 
     conda "${moduleDir}/../../conda/environment.yml"
@@ -374,14 +368,14 @@ process ANCESTRY_TARGET_SCORE {
         'bioresource-qc:latest' }"
 
     input:
-    tuple val(meta), path(bed), path(bim), path(fam)
+    tuple path(bed), path(bim), path(fam)
     path(allele_weights)
     path(score_snplist)
     val(n_pcs)
     path(target_fam)
 
     output:
-    tuple val(meta), path("profiles.sscore"), emit: scores
+    path("profiles.sscore"), emit: scores
     path "versions.yml", emit: versions
 
     when:
@@ -389,7 +383,7 @@ process ANCESTRY_TARGET_SCORE {
 
     script:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${meta.id}"
+    def prefix = bed.baseName
     def memory = task.memory ? "--memory ${task.memory.toMega()}" : ""
     def score_cols = "6-${n_pcs + 5}"
     def fam_arg = target_fam.name != 'NO_FILE' ? "--fam ${target_fam}" : ""
