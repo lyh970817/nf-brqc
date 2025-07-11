@@ -178,11 +178,11 @@ workflow {
     if (params.ref_1kg_dir && file(params.ref_1kg_dir).exists()) {
         // Create reference channel for chromosomes 1-22
         def ref_ch = Channel.from(1..22).map { chr ->
-            def ref_meta = [id: "1kg_chr${chr}"]
-            def ref_bed = file("${params.ref_1kg_dir}/1KG_Phase3.chr${chr}.bed")
-            def ref_bim = file("${params.ref_1kg_dir}/1KG_Phase3.chr${chr}.bim")
-            def ref_fam = file("${params.ref_1kg_dir}/1KG_Phase3.chr${chr}.fam")
-            [ref_meta, ref_bed, ref_bim, ref_fam, chr]
+            def ref_meta = [id: "ref.chr${chr}"]
+            def ref_pgen = file("${params.ref_1kg_dir}/1KG_Phase3.chr${chr}.pgen")
+            def ref_pvar = file("${params.ref_1kg_dir}/1KG_Phase3.chr${chr}.pvar")
+            def ref_psam = file("${params.ref_1kg_dir}/1KG_Phase3.chr${chr}.psam")
+            [ref_meta, ref_pgen, ref_pvar, ref_psam, chr]
         }
 
         // Run ancestry analysis workflow
@@ -203,7 +203,7 @@ workflow runAncestryAnalysis {
     ANCESTRY_TARGET_QC(target_files, params.geno, params.maf, params.hwe, sample_size)
 
     // Process reference files for each chromosome
-    ANCESTRY_REF_INTERSECT(ref_files_ch, ANCESTRY_TARGET_QC.out.snplist.map { _meta, snplist -> snplist }, params.geno, params.maf, params.hwe, ref_files_ch.map { _meta, _bed, _bim, _fam, chr -> chr })
+    ANCESTRY_REF_INTERSECT(ref_files_ch, ANCESTRY_TARGET_QC.out.snplist.map { _meta, snplist -> snplist }, params.geno, params.maf, params.hwe, ref_files_ch.map { _meta, _pgen, _pvar, _psam, chr -> chr })
 
     // Collect all reference intersect files
     def ref_intersect_files = ANCESTRY_REF_INTERSECT.out.plink_files.collect()
@@ -217,7 +217,7 @@ workflow runAncestryAnalysis {
                       ANCESTRY_ALLELE_MATCHING.out.flip_snplist.map { _meta, snplist -> snplist }.ifEmpty(file('NO_FILE')))
 
     // Long LD regions exclusion
-    ANCESTRY_LONG_LD_REGIONS(ANCESTRY_REF_MERGE.out.plink_files.map { _meta, _bed, bim, _fam -> [_meta, bim] })
+    ANCESTRY_LONG_LD_REGIONS(ANCESTRY_REF_MERGE.out.plink_files.map { _meta, _pgen, pvar, _psam -> [_meta, pvar] })
 
     // LD pruning
     ANCESTRY_LD_PRUNE(ANCESTRY_REF_MERGE.out.plink_files, ANCESTRY_LONG_LD_REGIONS.out.exclude_list.map { _meta, exclude -> exclude })
