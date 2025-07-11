@@ -130,6 +130,7 @@ process INDIVIDUAL_IBD_ANALYSIS {
 
     output:
     path("*.IBD_INDIV_outliers.txt"), emit: individual_outliers
+    path("*.IBD_INDIV.txt"), emit: individual_data
     path "versions.yml", emit: versions
 
     when:
@@ -194,7 +195,7 @@ process INDIVIDUAL_IBD_HISTOGRAMS {
         'bioresource-qc:latest' }"
 
     input:
-    path(genome_file)
+    path(individual_data_file)
     val(sd_threshold)
 
     output:

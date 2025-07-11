@@ -172,7 +172,7 @@ workflow {
     IBD_OUTLIER_DETECTION(IBD_CALCULATION.out.genome, MISSINGNESS_CHECK.out.imiss, params.name, params.ibd)
     INDIVIDUAL_IBD_ANALYSIS(IBD_CALCULATION.out.genome, params.name, params.ind_ibd)
     IBD_HISTOGRAMS(IBD_CALCULATION.out.genome, params.name)
-    INDIVIDUAL_IBD_HISTOGRAMS(IBD_CALCULATION.out.genome, params.ind_ibd)
+    INDIVIDUAL_IBD_HISTOGRAMS(INDIVIDUAL_IBD_ANALYSIS.out.individual_data, params.ind_ibd)
 
     // 10. Ancestry analysis (if reference data is available)
     if (params.ref_1kg_dir && file(params.ref_1kg_dir).exists()) {
