@@ -193,7 +193,6 @@ process ANCESTRY_PC_ANALYSIS {
     path("${output_name}.*.scale"), emit: pop_scale_files, optional: true
     path("${output_name}.pop_model.rds"), emit: model, optional: true
     path("${output_name}.model_pred"), emit: model_pred, optional: true
-    path("${output_name}.*.keep"), emit: keep_files
     path("${output_name}.*.eigenvec"), emit: pop_eigenvec
     path("${output_name}.PCs_plot_*.png"), emit: plots
     path("${output_name}.log"), emit: log
@@ -280,7 +279,9 @@ process ANCESTRY_PC_ANALYSIS {
             keep\$pop <- pop_name
             pop <- rbind(pop,keep)
         }
-        names(pop) <- c('FID','IID','pop')
+        names(pop) <- c('IID','pop')
+        pop\$FID <- pop\$IID
+
         PCs_ref_scaled_pop <- merge(PCs_ref_scaled,pop, by=c('FID','IID'))
         
         # Build model
