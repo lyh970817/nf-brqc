@@ -16,7 +16,7 @@ process IBD_CALCULATION {
 
     output:
     tuple path("*.IBD.bed"), path("*.IBD.bim"), path("*.IBD.fam"), emit: plink_files
-    path("*.IBD.genome"), emit: genome
+    path("*.IBD.kin0"), emit: kin0
     path("*.IBD.log"), emit: log
     path "versions.yml", emit: versions
 
@@ -29,10 +29,11 @@ process IBD_CALCULATION {
     def memory = task.memory ? "--memory ${task.memory.toMega()}" : ""
     
     """
+    # Run KING kinship estimation via PLINK
     plink \\
         --bfile ${prefix} \\
         --allow-extra-chr \\
-        --genome \\
+        --make-king-table \\
         --make-bed \\
         --out ${prefix}.IBD \\
         ${memory} \\
@@ -45,6 +46,7 @@ process IBD_CALCULATION {
     """
 }
 
+
 process IBD_OUTLIER_DETECTION {
     tag "${params.data}"
     label 'process_low'
@@ -55,15 +57,15 @@ process IBD_OUTLIER_DETECTION {
         'bioresource-qc:latest' }"
 
     input:
-    path(genome_file)
-    path(imiss_file)
+    path(kin0_file)       // KING kinship table (.kin0)
+    path(imiss_file)      // PLINK .imiss file for call rates
     val(study_name)
-    val(ibd_threshold)
+    val(kinship_threshold)
 
     output:
-    path("pihat_over_9_${study_name}.txt"), emit: twin_pairs
-    path("pihat_btw_4_6_${study_name}.txt"), emit: sibling_pairs
-    path("callrate_pihat_over_9_${study_name}.txt"), emit: twin_pairs_callrate
+    path("kinship_over_354_${study_name}.txt"), emit: twin_pairs
+    path("kinship_btw_177_354_${study_name}.txt"), emit: sibling_pairs
+    path("callrate_kinship_over_354_${study_name}.txt"), emit: twin_pairs_callrate
     path("*.IBD_outliers.txt"), emit: ibd_outliers
     path "versions.yml", emit: versions
 
@@ -75,48 +77,46 @@ process IBD_OUTLIER_DETECTION {
     def prefix = task.ext.prefix ?: "${params.data.split('/').last()}"
     
     """
-    # Check >0.9 Pi_Hat individuals: duplicates or twins
-    awk '\$10 > 0.9 {print \$0}' ${genome_file} > pihat_over_9_${study_name}.txt
+    # KING kinship coefficient thresholds:
+    #   >0.354 : duplicate/MZ twin
+    # 0.177–0.354 : full siblings (1st degree)
     
-    # Check 0.4 < \$10 < 0.6 Pi_Hat individuals: family
-    awk '\$10 > 0.4 && \$10 < 0.6 {print \$0}' ${genome_file} > pihat_btw_4_6_${study_name}.txt
+    # Twins/duplicates
+    awk '\$9 > 0.354 {print \$0}' ${kin0_file} > kinship_over_354_${study_name}.txt
     
-    # Add call rate info to pihat outputs
-    # Get header
-    awk 'NR<2 {print \$0 }' pihat_over_9_${study_name}.txt > pihat_over_9_${study_name}_header.txt
+    # Siblings
+    awk '\$9 > 0.177 && \$9 <= 0.354 {print \$0}' ${kin0_file} > kinship_btw_177_354_${study_name}.txt
     
-    # Add Call Rate (F_MISS) to header
+    # Prepare header for call rate table
+    awk 'NR<2 {print \$0 }' kinship_over_354_${study_name}.txt > kinship_over_354_${study_name}_header.txt
     echo "     F_MISS_1     F_MISS_2" > extra_header.txt
-    paste pihat_over_9_${study_name}_header.txt extra_header.txt > callrate_pihat_over_9_${study_name}_header.txt
+    paste kinship_over_354_${study_name}_header.txt extra_header.txt > callrate_kinship_over_354_${study_name}_header.txt
     
-    # Sort and join pihat and call rate files
-    # First, sort the files separately to ensure proper ordering
-    sort -k1,1 pihat_over_9_${study_name}.txt > pihat_over_9_${study_name}_sorted.txt
+    # Sort and join to add call rates
+    sort -k1,1 kinship_over_354_${study_name}.txt > kinship_over_354_${study_name}_sorted.txt
     sort -k1,1 ${imiss_file} > ${imiss_file}_sorted.txt
+    join -1 1 -2 1 -o auto kinship_over_354_${study_name}_sorted.txt ${imiss_file}_sorted.txt > callrate1_kinship_over_354_${study_name}.txt
     
-    # Join on first field (FID1)
-    join -1 1 -2 1 -o 1.1,1.2,1.3,1.4,1.5,1.6,1.7,1.8,1.9,1.10,1.11,1.12,1.13,1.14,2.6 pihat_over_9_${study_name}_sorted.txt ${imiss_file}_sorted.txt > callrate1_pihat_over_9_${study_name}.txt
+    # Join again on second individual ID (IID2 in KING output is column 3)
+    sort -k3,3 callrate1_kinship_over_354_${study_name}.txt > callrate1_kinship_over_354_${study_name}_sorted.txt
+    join -1 3 -2 1 -o auto callrate1_kinship_over_354_${study_name}_sorted.txt ${imiss_file}_sorted.txt > callrate2_kinship_over_354_${study_name}.txt
+    sort -k1 callrate2_kinship_over_354_${study_name}.txt > callrate3_kinship_over_354_${study_name}.txt
     
-    # Sort by third field (IID2) and join again
-    sort -k3,3 callrate1_pihat_over_9_${study_name}.txt > callrate1_pihat_over_9_${study_name}_sorted.txt
-    join -1 3 -2 1 -o 1.1,1.2,1.3,1.4,1.5,1.6,1.7,1.8,1.9,1.10,1.11,1.12,1.13,1.14,1.15,2.6 callrate1_pihat_over_9_${study_name}_sorted.txt ${imiss_file}_sorted.txt > callrate2_pihat_over_9_${study_name}.txt
-    sort -k1 callrate2_pihat_over_9_${study_name}.txt > callrate3_pihat_over_9_${study_name}.txt
+    # Final output with header
+    cat callrate_kinship_over_354_${study_name}_header.txt callrate3_kinship_over_354_${study_name}.txt > callrate_kinship_over_354_${study_name}.txt
     
-    # Attach new header
-    cat callrate_pihat_over_9_${study_name}_header.txt callrate3_pihat_over_9_${study_name}.txt > callrate_pihat_over_9_${study_name}.txt
-    
-    # Remove intermediate callrate files
+    # Clean up intermediates
     rm ./extra_header.txt
-    rm ./callrate1_pihat_over_9_${study_name}.txt
-    rm ./callrate2_pihat_over_9_${study_name}.txt
-    rm ./callrate3_pihat_over_9_${study_name}.txt
-    rm ./pihat_over_9_${study_name}_header.txt
-    rm ./pihat_over_9_${study_name}_sorted.txt
-    rm ./callrate1_pihat_over_9_${study_name}_sorted.txt
+    rm ./callrate1_kinship_over_354_${study_name}.txt
+    rm ./callrate2_kinship_over_354_${study_name}.txt
+    rm ./callrate3_kinship_over_354_${study_name}.txt
+    rm ./kinship_over_354_${study_name}_header.txt
+    rm ./kinship_over_354_${study_name}_sorted.txt
+    rm ./callrate1_kinship_over_354_${study_name}_sorted.txt
     rm ./${imiss_file}_sorted.txt
     
-    # Remove one sample from each pair with pi-hat (% IBD) above threshold
-    awk -v ibd="${ibd_threshold}" '\$10 >= ibd {print \$1, \$2}' ${genome_file} > ${prefix}.IBD_outliers.txt
+    # Mark outliers above threshold
+    awk -v kin="${kinship_threshold}" '\$9 >= kin {print \$1, \$2}' ${kin0_file} > ${prefix}.IBD_outliers.txt
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
